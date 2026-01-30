@@ -1,0 +1,273 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model - Core user entity
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  username      String     @unique
+  password      String
+  firstName     String?
+  lastName      String?
+  avatar        String?
+  bio           String?
+  isActive      Boolean    @default(true)
+  isEmailVerified Boolean  @default(false)
+  emailVerificationToken String?
+  emailVerificationTokenExpiresAt DateTime?
+  
+  // Relations
+  profile       Profile?
+  creator       Creator?
+  subscribers   Subscriber[]
+  subscriptions Subscription[]
+  orders        Order[]
+  reviews       Review[]
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([email])
+  @@index([username])
+}
+
+// User Profile
+model Profile {
+  id            String     @id @default(cuid())
+  userId        String     @unique
+  bio           String?
+  location      String?
+  website       String?
+  socialLinks   Json?
+  verified      Boolean    @default(false)
+  verificationBadge String?
+  
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+// Creator Profile
+model Creator {
+  id            String     @id @default(cuid())
+  userId        String     @unique
+  displayName   String
+  slug          String     @unique
+  description   String?
+  profileImage  String?
+  bannerImage   String?
+  isVerified    Boolean    @default(false)
+  verificationDate DateTime?
+  totalEarnings Float      @default(0)
+  rating        Float      @default(0)
+  totalReviews  Int        @default(0)
+  
+  // Relations
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products      Product[]  @relation("CreatorProducts")
+  subscribers   Subscriber[] @relation("CreatorSubscribers")
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([slug])
+  @@index([userId])
+}
+
+// Subscription Tier
+model SubscriptionTier {
+  id            String     @id @default(cuid())
+  name          String
+  description   String?
+  price         Float
+  billingCycle  String     // "monthly", "yearly"
+  features      Json?      // Array of features
+  maxSupport    Int?       // Support level
+  isActive      Boolean    @default(true)
+  
+  subscriptions Subscription[]
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+// Subscriber relationship
+model Subscriber {
+  id            String     @id @default(cuid())
+  creatorId     String
+  subscriberId  String
+  status        String     @default("active") // "active", "paused", "cancelled"
+  
+  creator       Creator    @relation("CreatorSubscribers", fields: [creatorId], references: [id], onDelete: Cascade)
+  subscriber    User       @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  
+  subscribedAt  DateTime   @default(now())
+  cancelledAt   DateTime?
+  
+  @@unique([creatorId, subscriberId])
+  @@index([creatorId])
+  @@index([subscriberId])
+}
+
+// Subscription (Paid subscriptions)
+model Subscription {
+  id            String     @id @default(cuid())
+  userId        String
+  tierId        String
+  status        String     @default("active") // "active", "paused", "cancelled", "expired"
+  currentPeriodStart DateTime
+  currentPeriodEnd DateTime
+  cancelledAt   DateTime?
+  
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier          SubscriptionTier @relation(fields: [tierId], references: [id])
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([userId])
+  @@index([tierId])
+}
+
+// Product/Service model
+model Product {
+  id            String     @id @default(cuid())
+  creatorId     String
+  title         String
+  slug          String
+  description   String?
+  price         Float
+  currency      String     @default("USD")
+  images        String[]   // Array of image URLs
+  status        String     @default("draft") // "draft", "published", "archived"
+  category      String?
+  tags          String[]
+  rating        Float      @default(0)
+  totalReviews  Int        @default(0)
+  stock         Int?
+  isDigital     Boolean    @default(false)
+  
+  // Relations
+  creator       Creator    @relation("CreatorProducts", fields: [creatorId], references: [id], onDelete: Cascade)
+  orderItems    OrderItem[]
+  reviews       Review[]
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([creatorId, slug])
+  @@index([creatorId])
+  @@index([status])
+  @@index([category])
+}
+
+// Order model
+model Order {
+  id            String     @id @default(cuid())
+  userId        String
+  orderNumber   String     @unique
+  status        String     @default("pending") // "pending", "processing", "completed", "failed", "refunded"
+  totalAmount   Float
+  currency      String     @default("USD")
+  shippingAddress Json?
+  notes         String?
+  
+  // Relations
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items         OrderItem[]
+  payment       Payment?
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([orderNumber])
+}
+
+// Order Items
+model OrderItem {
+  id            String     @id @default(cuid())
+  orderId       String
+  productId     String
+  quantity      Int
+  price         Float
+  
+  order         Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product       Product    @relation(fields: [productId], references: [id])
+  
+  createdAt     DateTime   @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+// Payment model
+model Payment {
+  id            String     @id @default(cuid())
+  orderId       String     @unique
+  amount        Float
+  currency      String     @default("USD")
+  status        String     @default("pending") // "pending", "completed", "failed", "refunded"
+  paymentMethod String?
+  stripePaymentId String?
+  stripeCustomerId String?
+  failureReason String?
+  
+  order         Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([orderId])
+  @@index([stripePaymentId])
+}
+
+// Review model
+model Review {
+  id            String     @id @default(cuid())
+  productId     String
+  userId        String
+  rating        Int        @default(5) // 1-5
+  title         String?
+  comment       String?
+  helpful       Int        @default(0)
+  
+  product       Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([productId, userId])
+  @@index([productId])
+  @@index([userId])
+}
+
+// Activity Log
+model ActivityLog {
+  id            String     @id @default(cuid())
+  userId        String?
+  action        String
+  entityType    String
+  entityId      String
+  changes       Json?
+  ipAddress     String?
+  userAgent     String?
+  
+  createdAt     DateTime   @default(now())
+
+  @@index([userId])
+  @@index([entityType])
+  @@index([entityId])
+}

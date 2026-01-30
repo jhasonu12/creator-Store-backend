@@ -1,0 +1,97 @@
+import 'express-async-errors';
+import express, { Express, Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+
+import { config } from '@config/environment';
+import { initRedis } from '@config/redis';
+import { requestLogger } from '@middleware/logger';
+import { errorHandler } from '@middleware/errorHandler';
+
+import authRoutes from '@routes/auth.routes';
+import userRoutes from '@routes/user.routes';
+
+import { logger } from '@utils/logger';
+import { sendResponse } from '@utils/errorHandler';
+
+export const createApp = (): Express => {
+  const app = express();
+
+  // Middleware: Security
+  app.use(helmet());
+  app.use(cors({ origin: config.cors.origin, credentials: true }));
+
+  // Middleware: Body parsing
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+  // Middleware: Logging
+  if (config.app.nodeEnv === 'production') {
+    app.use(morgan('combined'));
+  } else {
+    app.use(morgan('dev'));
+  }
+  app.use(requestLogger);
+
+  // Health check endpoint
+  app.get('/health', (req: Request, res: Response) => {
+    sendResponse(res, 200, 'Service is healthy', { timestamp: new Date() });
+  });
+
+  // API version endpoint
+  app.get('/api/version', (req: Request, res: Response) => {
+    sendResponse(res, 200, 'API Version', { version: config.app.apiVersion });
+  });
+
+  // API Routes
+  app.use(`/api/${config.app.apiVersion}/auth`, authRoutes);
+  app.use(`/api/${config.app.apiVersion}/users`, userRoutes);
+
+  // 404 handler
+  app.use((req: Request, res: Response) => {
+    sendResponse(res, 404, `Route not found: ${req.path}`);
+  });
+
+  // Error handling middleware (must be last)
+  app.use(errorHandler);
+
+  return app;
+};
+
+export const startServer = async (): Promise<void> => {
+  try {
+    // Initialize Redis (non-blocking - graceful degradation)
+    // initRedis()
+    //   .then(() => logger.info('Redis connected'))
+    //   .catch((error) => logger.warn('Redis unavailable - running without cache', error));
+
+    const app = createApp();
+    const PORT = config.app.port;
+
+    const server = app.listen(PORT, () => {
+      logger.info(`Server running on port ${PORT} in ${config.app.nodeEnv} mode`);
+      logger.info(`API available at http://localhost:${PORT}/api/${config.app.apiVersion}`);
+    });
+
+    // Graceful shutdown handlers
+    process.on('SIGTERM', () => {
+      logger.info('SIGTERM received: shutting down gracefully');
+      server.close(() => {
+        logger.info('Server closed');
+        process.exit(0);
+      });
+    });
+
+    process.on('SIGINT', () => {
+      logger.info('SIGINT received: shutting down gracefully');
+      server.close(() => {
+        logger.info('Server closed');
+        process.exit(0);
+      });
+    });
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};

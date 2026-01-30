@@ -1,0 +1,542 @@
+# GitHub Copilot Instructions for Creator World Backend
+
+## Project Overview
+Creator World Backend is a production-grade Node.js/Express API for a Stan-store like platform. Built with TypeScript, PostgreSQL, Redis, and following enterprise-level software engineering practices.
+
+## Core Architecture Principles
+
+### 1. Layered Architecture
+```
+Routes → Controllers → Services → Repositories → Database
+```
+- **Routes**: Handle HTTP endpoints and routing
+- **Controllers**: Parse requests, call services, format responses
+- **Services**: Contain business logic and orchestrate repositories
+- **Repositories**: Data access layer, interact with Prisma ORM
+- **Database**: PostgreSQL via Prisma
+
+### 2. Dependency Injection Pattern
+- Services depend on repositories
+- Controllers depend on services
+- Instantiate new instances in controllers for simplicity
+- Can be refactored to DI container if needed
+
+### 3. Type Safety
+- All functions have explicit return types
+- Strict TypeScript mode enabled
+- Use interfaces and enums for domain models
+- DTOs for API contracts
+
+## Code Structure Guidelines
+
+### File Naming Conventions
+```
+feature.controller.ts      # Controllers
+feature.service.ts         # Services
+feature.repository.ts      # Repositories
+feature.dto.ts            # Data Transfer Objects
+feature.validator.ts      # Request validators
+feature.routes.ts         # Routes
+```
+
+### Import Paths (TypeScript Aliases)
+```typescript
+// ✅ Use path aliases
+import { UserService } from '@services/user.service';
+import { logger } from '@utils/logger';
+import { config } from '@config/environment';
+
+// ❌ Avoid relative imports
+import { UserService } from '../../services/user.service';
+```
+
+## Creating New Features
+
+### Step 1: Define Data Transfer Objects (DTO)
+```typescript
+// src/dto/feature.dto.ts
+export class CreateFeatureDTO {
+  name!: string;
+  description?: string;
+}
+
+export class FeatureResponseDTO {
+  id!: string;
+  name!: string;
+  // ... response fields
+}
+```
+
+### Step 2: Create Request Validators
+```typescript
+// src/validators/feature.validator.ts
+import Joi from 'joi';
+
+export const createFeatureSchema = Joi.object({
+  body: Joi.object({
+    name: Joi.string().required(),
+    description: Joi.string().optional(),
+  }),
+});
+```
+
+### Step 3: Build Repository (Data Access)
+```typescript
+// src/repositories/feature.repository.ts
+import { getPrismaClient } from '@config/database';
+import { Feature } from '@prisma/client';
+
+export class FeatureRepository {
+  private prisma = getPrismaClient();
+
+  async findById(id: string): Promise<Feature | null> {
+    return this.prisma.feature.findUnique({ where: { id } });
+  }
+
+  async create(data: any): Promise<Feature> {
+    return this.prisma.feature.create({ data });
+  }
+
+  // ... other CRUD methods
+}
+```
+
+### Step 4: Create Service (Business Logic)
+```typescript
+// src/services/feature.service.ts
+import { FeatureRepository } from '@repositories/feature.repository';
+import { CreateFeatureDTO } from '@dto/feature.dto';
+import { AppError } from '@utils/errorHandler';
+
+export class FeatureService {
+  private repository = new FeatureRepository();
+
+  async createFeature(dto: CreateFeatureDTO): Promise<any> {
+    // Validate business rules
+    if (!dto.name) {
+      throw new AppError(400, 'Name is required');
+    }
+
+    // Call repository
+    const feature = await this.repository.create(dto);
+
+    return this.toResponseDTO(feature);
+  }
+
+  private toResponseDTO(feature: any): any {
+    return {
+      id: feature.id,
+      name: feature.name,
+      // ... map fields
+    };
+  }
+}
+```
+
+### Step 5: Create Controller (HTTP Handlers)
+```typescript
+// src/controllers/feature.controller.ts
+import { Request, Response, NextFunction } from 'express';
+import { FeatureService } from '@services/feature.service';
+import { asyncHandler, sendResponse, AppError } from '@utils/errorHandler';
+import { RESPONSE_MESSAGES } from '@constants/messages';
+
+export class FeatureController {
+  private service = new FeatureService();
+
+  createFeature = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      try {
+        const result = await this.service.createFeature(req.body);
+        sendResponse(res, 201, RESPONSE_MESSAGES.CREATED, result);
+      } catch (error) {
+        if (error instanceof AppError) {
+          throw error;
+        }
+        throw new AppError(500, RESPONSE_MESSAGES.INTERNAL_ERROR);
+      }
+    }
+  );
+
+  // ... other handlers
+}
+```
+
+### Step 6: Create Routes
+```typescript
+// src/routes/feature.routes.ts
+import { Router } from 'express';
+import { FeatureController } from '@controllers/feature.controller';
+import { validateRequest } from '@middleware/validation';
+import { createFeatureSchema } from '@validators/feature.validator';
+import { authMiddleware } from '@middleware/auth';
+
+const router = Router();
+const controller = new FeatureController();
+
+/**
+ * @route POST /features
+ * @desc Create a new feature
+ * @access Private
+ */
+router.post('/', authMiddleware, validateRequest(createFeatureSchema), controller.createFeature);
+
+/**
+ * @route GET /features/:id
+ * @desc Get feature by ID
+ * @access Public
+ */
+router.get('/:id', controller.getFeature);
+
+export default router;
+```
+
+### Step 7: Register Routes in App
+```typescript
+// src/app.ts
+import featureRoutes from '@routes/feature.routes';
+
+// Add after other route registrations
+app.use(`/api/${config.app.apiVersion}/features`, featureRoutes);
+```
+
+## Error Handling
+
+### Using AppError
+```typescript
+// Throw custom errors with status codes
+throw new AppError(404, 'Resource not found');
+throw new AppError(400, 'Validation failed', true, { field: 'email' });
+
+// Errors are caught by errorHandler middleware
+// Response is automatically formatted
+```
+
+### Response Format
+```json
+{
+  "success": false,
+  "statusCode": 400,
+  "message": "Error message",
+  "details": { /* optional */ }
+}
+```
+
+## Caching Strategy
+
+### Use Redis Cache for Performance
+```typescript
+import { cacheGetOrSet, cacheSet, cacheDel } from '@utils/cache';
+
+// Automatically cache with fallback
+const user = await cacheGetOrSet(
+  `user:${userId}`,
+  () => repository.findById(userId),
+  3600 // TTL in seconds
+);
+
+// Invalidate cache after updates
+await cacheDel(`user:${userId}`);
+```
+
+## Validation
+
+### Request Validation with Joi
+```typescript
+// Define schema
+const schema = Joi.object({
+  body: Joi.object({
+    email: Joi.string().email().required(),
+    age: Joi.number().min(18).max(120).optional(),
+  }),
+  query: Joi.object({
+    page: Joi.number().min(1).optional(),
+  }),
+});
+
+// Use in routes
+router.post('/', validateRequest(schema), controller.handler);
+```
+
+## Database Queries
+
+### Using Prisma
+```typescript
+// Fetch with relations
+const user = await prisma.user.findUnique({
+  where: { id: userId },
+  include: { profile: true, products: true },
+});
+
+// Pagination
+const { skip, take } = getPaginationParams(page, limit);
+const users = await prisma.user.findMany({ skip, take });
+
+// Filtering
+const products = await prisma.product.findMany({
+  where: { creatorId, status: 'published' },
+});
+
+// Transactions
+await prisma.$transaction([
+  prisma.user.update({ ... }),
+  prisma.order.create({ ... }),
+]);
+```
+
+## Authentication
+
+### Protected Routes
+```typescript
+// Use authMiddleware
+router.get('/profile', authMiddleware, controller.getProfile);
+
+// Extract user from request
+const userId = (req as AuthRequest).user.id;
+```
+
+### JWT Tokens
+```typescript
+import { generateToken, verifyToken } from '@utils/helpers';
+
+// Generate
+const token = generateToken({
+  id: user.id,
+  email: user.email,
+  username: user.username,
+});
+
+// Verify (automatic in middleware)
+const decoded = verifyToken(token);
+```
+
+## Logging
+
+### Use Winston Logger
+```typescript
+import { logger } from '@utils/logger';
+
+logger.info('User registered', { userId, email });
+logger.error('Database error', error);
+logger.warn('Rate limit approaching');
+logger.debug('Processing user request');
+```
+
+## Testing
+
+### Unit Test Structure
+```typescript
+describe('UserService', () => {
+  let service: UserService;
+
+  beforeEach(() => {
+    service = new UserService();
+  });
+
+  it('should create a user', async () => {
+    const result = await service.createUser({ email: 'test@test.com' });
+    expect(result).toBeDefined();
+  });
+});
+```
+
+## Environment Configuration
+
+### Add New Config Variables
+1. Add to `.env.example`
+2. Define in `src/config/environment.ts`
+3. Use via `config.section.variable`
+
+```typescript
+// In environment.ts
+export const config = {
+  myFeature: {
+    apiKey: process.env.MY_FEATURE_API_KEY || '',
+    enabled: process.env.MY_FEATURE_ENABLED === 'true',
+  },
+};
+
+// In services
+import { config } from '@config/environment';
+const apiKey = config.myFeature.apiKey;
+```
+
+## Performance Best Practices
+
+1. **Pagination**: Always paginate large result sets
+2. **Caching**: Cache frequently accessed data in Redis
+3. **Database**: Use indexes, avoid N+1 queries
+4. **Queries**: Select only needed fields with Prisma select
+5. **Connections**: Use connection pooling (configured in .env)
+
+## Security Best Practices
+
+1. **Passwords**: Always hash with bcrypt, never log passwords
+2. **Tokens**: Don't expose tokens in logs, use secure expiration
+3. **Validation**: Validate all inputs with Joi schemas
+4. **CORS**: Whitelist origins in config
+5. **Helmet**: Already configured for security headers
+6. **Environment**: Never commit .env file
+
+## Code Quality Standards
+
+### Linting
+```bash
+npm run lint      # Check
+npm run lint:fix  # Fix automatically
+```
+
+### Formatting
+```bash
+npm run format    # Format with Prettier
+```
+
+### Type Checking
+```bash
+npm run type-check  # Find type errors
+```
+
+## Common Patterns
+
+### Async Error Handling in Controllers
+```typescript
+controller = asyncHandler(async (req, res, next) => {
+  try {
+    const result = await service.method();
+    sendResponse(res, 200, 'Success', result);
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error; // asyncHandler catches it
+    }
+    throw new AppError(500, 'Internal Error');
+  }
+});
+```
+
+### Pagination Response
+```typescript
+const { data, meta } = await service.getPaginated(page, limit);
+sendResponse(res, 200, 'Success', data, meta);
+```
+
+### Filtered Queries
+```typescript
+const filters = {
+  category: req.query.category,
+  search: req.query.search,
+};
+const results = await repository.findWithFilters(filters, page, limit);
+```
+
+## Extending the API
+
+### Adding a New Entity
+
+1. Add Prisma model to `schema.prisma`
+2. Run `npm run prisma:migrate`
+3. Create DTO, Validator, Repository, Service, Controller
+4. Create routes and register in app.ts
+5. Add tests
+
+### Adding a New Middleware
+
+1. Create in `src/middleware/`
+2. Import in routes or globally in `app.ts`
+3. Document its purpose
+
+### Adding a New Utility
+
+1. Create in `src/utils/`
+2. Export functions
+3. Use via `@utils/` alias
+
+## Debugging
+
+### Development Mode
+```bash
+npm run dev  # Includes source maps and verbose logging
+```
+
+### Prisma Studio
+```bash
+npm run prisma:studio  # Visual database browser
+```
+
+### Check Logs
+```
+logs/error.log  # Error log file
+logs/all.log    # All events
+```
+
+## API Response Standards
+
+### Success Response
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Operation successful",
+  "data": { /* ... */ },
+  "meta": { "page": 1, "limit": 20 }
+}
+```
+
+### Error Response
+```json
+{
+  "success": false,
+  "statusCode": 400,
+  "message": "Validation failed",
+  "details": { "field": "Error message" }
+}
+```
+
+## Production Deployment
+
+### Before Deploying
+- [ ] Set NODE_ENV=production
+- [ ] Use strong JWT_SECRET
+- [ ] Configure PostgreSQL with proper user permissions
+- [ ] Setup Redis for production
+- [ ] Configure CORS for frontend domain
+- [ ] Enable rate limiting
+- [ ] Setup monitoring and alerting
+- [ ] Configure SSL/TLS
+- [ ] Setup CI/CD pipeline
+
+### Database Migrations
+```bash
+npm run prisma:migrate:deploy  # Apply pending migrations
+```
+
+## Useful Commands Reference
+
+```bash
+npm run dev              # Start development server
+npm run build            # Build to JavaScript
+npm start                # Run production build
+npm test                 # Run all tests
+npm run lint             # Check code style
+npm run lint:fix         # Auto-fix code style
+npm run format           # Format code
+npm run prisma:migrate   # Create new migration
+npm run prisma:studio    # Open database GUI
+npm run prisma:seed      # Seed database
+```
+
+---
+
+## Quick Tips
+
+1. Always use DTOs for API responses
+2. Validate inputs in validators, not in services
+3. Use repositories for all database access
+4. Throw AppError for business logic errors
+5. Cache expensive operations
+6. Log important events and errors
+7. Test before pushing code
+8. Follow the established patterns
+9. Use path aliases (@services, @utils, etc.)
+10. Keep functions small and focused
+
+This ensures maintainability, scalability, and consistency across the codebase.
