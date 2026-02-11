@@ -10,7 +10,11 @@ export const config = {
 
   // Database
   database: {
-    url: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/creator_world',
+    host: process.env.DATABASE_HOST || 'localhost',
+    port: parseInt(process.env.DATABASE_PORT || '5432', 10),
+    username: process.env.DATABASE_USER || 'postgres',
+    password: process.env.DATABASE_PASSWORD || 'password',
+    name: process.env.DATABASE_NAME || 'creator_world',
     poolMin: parseInt(process.env.DATABASE_POOL_MIN || '2', 10),
     poolMax: parseInt(process.env.DATABASE_POOL_MAX || '10', 10),
   },

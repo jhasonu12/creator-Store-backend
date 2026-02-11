@@ -1,10 +1,9 @@
-import { UserRepository } from '@repositories/user.repository';
+import { User } from '@models/User';
 import { UpdateUserDTO } from '@dto/user.dto';
 import { AppError } from '@utils/errorHandler';
 import { cacheGet, cacheSet, cacheDel } from '@utils/cache';
 
 export class UserService {
-  private userRepository = new UserRepository();
 
   async getUserById(id: string): Promise<any> {
     // Try to get from cache first
@@ -13,7 +12,7 @@ export class UserService {
       return cachedUser;
     }
 
-    const user = await this.userRepository.findById(id);
+    const user = await User.findByPk(id);
     if (!user) {
       throw new AppError(404, 'User not found');
     }
@@ -37,12 +36,12 @@ export class UserService {
   }
 
   async updateUser(id: string, data: UpdateUserDTO): Promise<any> {
-    const user = await this.userRepository.findById(id);
+    const user = await User.findByPk(id);
     if (!user) {
       throw new AppError(404, 'User not found');
     }
 
-    const updated = await this.userRepository.update(id, data);
+    const updated = await user.update(data);
 
     // Invalidate cache
     await cacheDel(`user:${id}`);
@@ -59,18 +58,22 @@ export class UserService {
   }
 
   async deleteUser(id: string): Promise<void> {
-    const user = await this.userRepository.findById(id);
+    const user = await User.findByPk(id);
     if (!user) {
       throw new AppError(404, 'User not found');
     }
 
-    await this.userRepository.delete(id);
+    await user.destroy();
     await cacheDel(`user:${id}`);
   }
 
   async getAllUsers(page: number, limit: number): Promise<any> {
     const skip = (page - 1) * limit;
-    const { users, total } = await this.userRepository.findAll(skip, limit);
+    const { rows: users, count: total } = await User.findAndCountAll({
+      offset: skip,
+      limit,
+      order: [['createdAt', 'DESC']],
+    });
 
     return {
       users,

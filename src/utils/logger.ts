@@ -22,10 +22,10 @@ winston.addColors(colors);
 const format = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format.colorize({ all: true }),
-  winston.format.printf((info) => {
+  winston.format.printf((info: any) => {
     const { timestamp, level, message, ...args } = info;
 
-    const ts = timestamp.slice(0, 19).replace('T', ' ');
+    const ts = (timestamp as string).slice(0, 19).replace('T', ' ');
     return `${ts} [${level}]: ${message} ${Object.keys(args).length ? JSON.stringify(args, null, 2) : ''}`;
   })
 );

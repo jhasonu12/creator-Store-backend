@@ -1,20 +1,19 @@
-import { UserRepository } from '@repositories/user.repository';
+import { User } from '@models/User';
 import { CreateUserDTO, LoginDTO } from '@dto/user.dto';
 import { hashPassword, comparePasswords, generateToken, generateRefreshToken } from '@utils/helpers';
 import { AppError } from '@utils/errorHandler';
 import { cacheSet, cacheGet, cacheDel } from '@utils/cache';
 
 export class AuthService {
-  private userRepository = new UserRepository();
 
   async register(data: CreateUserDTO): Promise<any> {
     // Check if user already exists
-    const existingUser = await this.userRepository.findByEmail(data.email);
+    const existingUser = await User.findOne({ where: { email: data.email } });
     if (existingUser) {
       throw new AppError(409, 'User with this email already exists');
     }
 
-    const existingUsername = await this.userRepository.findByUsername(data.username);
+    const existingUsername = await User.findOne({ where: { username: data.username } });
     if (existingUsername) {
       throw new AppError(409, 'Username already taken');
     }
@@ -23,7 +22,7 @@ export class AuthService {
     const hashedPassword = await hashPassword(data.password);
 
     // Create user
-    const user = await this.userRepository.create({
+    const user = await User.create({
       ...data,
       password: hashedPassword,
     });
@@ -55,7 +54,7 @@ export class AuthService {
   }
 
   async login(data: LoginDTO): Promise<any> {
-    const user = await this.userRepository.findByEmail(data.email);
+    const user = await User.findOne({ where: { email: data.email } });
     if (!user) {
       throw new AppError(401, 'Invalid credentials');
     }

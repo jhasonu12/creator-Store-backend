@@ -25,7 +25,7 @@ A production-grade Node.js + Express.js backend API for a Stan-store like platfo
 - **Type-Safe**: Full TypeScript support with strict mode
 - **Production Ready**: Error handling, logging, security middleware
 - **Scalable Architecture**: Repository pattern, service layer, dependency injection
-- **Database**: PostgreSQL with Prisma ORM
+- **Database**: PostgreSQL with Sequelize ORM
 - **Caching**: Redis for performance optimization
 - **Authentication**: JWT-based auth with refresh tokens
 - **Validation**: Request validation with Joi

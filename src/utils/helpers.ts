@@ -29,15 +29,15 @@ export interface JwtPayload {
 }
 
 export const generateToken = (payload: Omit<JwtPayload, 'iat' | 'exp'>): string => {
-  return jwt.sign(payload, config.jwt.secret, {
-    expiresIn: config.jwt.expiration,
-  });
+  return jwt.sign(payload, config.jwt.secret as string, {
+    expiresIn: config.jwt.expiration as string,
+  } as any);
 };
 
 export const generateRefreshToken = (payload: Omit<JwtPayload, 'iat' | 'exp'>): string => {
-  return jwt.sign(payload, config.jwt.refreshSecret, {
-    expiresIn: config.jwt.refreshExpiration,
-  });
+  return jwt.sign(payload, config.jwt.refreshSecret as string, {
+    expiresIn: config.jwt.refreshExpiration as string,
+  } as any);
 };
 
 export const verifyToken = (token: string): JwtPayload => {

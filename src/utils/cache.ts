@@ -1,5 +1,6 @@
 import { getRedisClient } from '@config/redis';
 import { config } from '@config/environment';
+import { logger } from './logger';
 
 export const cacheGet = async (key: string): Promise<any> => {
   try {
@@ -7,7 +8,7 @@ export const cacheGet = async (key: string): Promise<any> => {
     const cached = await redis.get(key);
     return cached ? JSON.parse(cached) : null;
   } catch (error) {
-    console.error('Cache get error:', error);
+    logger.error('Cache get error:', error);
     return null;
   }
 };
@@ -18,7 +19,7 @@ export const cacheSet = async (key: string, value: any, ttl?: number): Promise<v
     const serialized = JSON.stringify(value);
     await redis.setEx(key, ttl || config.redis.ttl, serialized);
   } catch (error) {
-    console.error('Cache set error:', error);
+    logger.error('Cache set error:', error);
   }
 };
 
@@ -27,7 +28,7 @@ export const cacheDel = async (key: string): Promise<void> => {
     const redis = getRedisClient();
     await redis.del(key);
   } catch (error) {
-    console.error('Cache delete error:', error);
+    logger.error('Cache delete error:', error);
   }
 };
 
@@ -39,7 +40,7 @@ export const cacheInvalidatePattern = async (pattern: string): Promise<void> => 
       await redis.del(keys);
     }
   } catch (error) {
-    console.error('Cache pattern invalidation error:', error);
+    logger.error('Cache pattern invalidation error:', error);
   }
 };
 

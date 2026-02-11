@@ -61,6 +61,10 @@ export const createApp = (): Express => {
 
 export const startServer = async (): Promise<void> => {
   try {
+    // Initialize database
+    const { initializeDatabase, disconnectDatabase } = await import('@config/database');
+    await initializeDatabase();
+
     // Initialize Redis (non-blocking - graceful degradation)
     // initRedis()
     //   .then(() => logger.info('Redis connected'))
@@ -75,17 +79,19 @@ export const startServer = async (): Promise<void> => {
     });
 
     // Graceful shutdown handlers
-    process.on('SIGTERM', () => {
+    process.on('SIGTERM', async () => {
       logger.info('SIGTERM received: shutting down gracefully');
-      server.close(() => {
+      server.close(async () => {
+        await disconnectDatabase();
         logger.info('Server closed');
         process.exit(0);
       });
     });
 
-    process.on('SIGINT', () => {
+    process.on('SIGINT', async () => {
       logger.info('SIGINT received: shutting down gracefully');
-      server.close(() => {
+      server.close(async () => {
+        await disconnectDatabase();
         logger.info('Server closed');
         process.exit(0);
       });
