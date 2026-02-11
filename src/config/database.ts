@@ -19,6 +19,12 @@ export const getSequelizeInstance = (): Sequelize => {
         min: config.database.poolMin,
         max: config.database.poolMax,
       },
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false,
+        },
+      },
     });
   }
   return sequelizeInstance;
@@ -27,14 +33,14 @@ export const getSequelizeInstance = (): Sequelize => {
 export const initializeDatabase = async (): Promise<void> => {
   try {
     const sequelize = getSequelizeInstance();
-    
+
     // Initialize models and set up associations
     initializeModels(sequelize);
-    
+
     // Test connection
     await sequelize.authenticate();
     logger.info('✓ Database connection established');
-    
+
     // Sync models with database
     if (config.app.nodeEnv === 'development') {
       await sequelize.sync({ alter: true });
@@ -52,4 +58,3 @@ export const disconnectDatabase = async (): Promise<void> => {
     logger.info('✓ Database connection closed');
   }
 };
-
