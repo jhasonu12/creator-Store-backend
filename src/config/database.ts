@@ -1,7 +1,7 @@
 import { Sequelize } from 'sequelize';
 import { config } from './environment';
 import { initializeModels } from '@models/index';
-import { logger } from '@utils/logger';
+import { logger } from '@common/utils/logger';
 
 let sequelizeInstance: Sequelize;
 
@@ -43,7 +43,7 @@ export const initializeDatabase = async (): Promise<void> => {
 
     // Sync models with database
     if (config.app.nodeEnv === 'development') {
-      await sequelize.sync({ alter: true });
+      await sequelize.sync();
       logger.info('✓ Database models synchronized');
     }
   } catch (error) {

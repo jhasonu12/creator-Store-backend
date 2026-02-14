@@ -1,43 +1,39 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
-export class OrderItem extends Model {
+export class Course extends Model {
   declare id: string;
-  declare orderId: string;
   declare productId: string;
-  declare creatorId: string;
-  declare price: number;
+  declare totalDuration: number;
+  declare certificateEnabled: boolean;
   declare createdAt: Date;
   declare updatedAt: Date;
 
   // Associations
-  declare getOrder: any;
   declare getProduct: any;
-  declare getCreatorProfile: any;
+  declare getCourseSections: any;
+  declare getCourseProgress: any;
 }
 
-export const initOrderItem = (sequelize: Sequelize) => {
-  OrderItem.init(
+export const initCourse = (sequelize: Sequelize) => {
+  Course.init(
     {
       id: {
         type: DataTypes.UUID,
         primaryKey: true,
         defaultValue: DataTypes.UUIDV4,
       },
-      orderId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-      },
       productId: {
         type: DataTypes.UUID,
         allowNull: false,
+        unique: true,
       },
-      creatorId: {
-        type: DataTypes.UUID,
-        allowNull: false,
+      totalDuration: {
+        type: DataTypes.INTEGER,
+        comment: 'Duration in minutes',
       },
-      price: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
+      certificateEnabled: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -50,15 +46,11 @@ export const initOrderItem = (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'order_items',
+      tableName: 'courses',
       timestamps: true,
-      indexes: [
-        { fields: ['orderId'] },
-        { fields: ['productId'] },
-        { fields: ['creatorId'] },
-      ],
+      indexes: [{ fields: ['productId'] }],
     }
   );
 
-  return OrderItem;
+  return Course;
 };

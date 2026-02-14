@@ -1,16 +1,27 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
+export enum OrderStatus {
+  PENDING = 'PENDING',
+  PAID = 'PAID',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED',
+}
+
 export class Order extends Model {
   declare id: string;
-  declare userId: string;
-  declare orderNumber: string;
-  declare status: string;
+  declare buyerId: string | null;
+  declare email: string;
+  declare status: OrderStatus;
   declare totalAmount: number;
   declare currency: string;
-  declare shippingAddress: any;
-  declare notes: string | null;
+  declare paymentProvider: string | null;
   declare createdAt: Date;
   declare updatedAt: Date;
+
+  // Associations
+  declare getUser: any;
+  declare getOrderItems: any;
+  declare getPayment: any;
 }
 
 export const initOrder = (sequelize: Sequelize) => {
@@ -21,33 +32,28 @@ export const initOrder = (sequelize: Sequelize) => {
         primaryKey: true,
         defaultValue: DataTypes.UUIDV4,
       },
-      userId: {
+      buyerId: {
         type: DataTypes.UUID,
-        allowNull: false,
+        allowNull: true,
       },
-      orderNumber: {
+      email: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
       },
       status: {
-        type: DataTypes.STRING,
-        defaultValue: 'pending',
+        type: DataTypes.ENUM(...Object.values(OrderStatus)),
+        defaultValue: OrderStatus.PENDING,
       },
       totalAmount: {
-        type: DataTypes.FLOAT,
+        type: DataTypes.DECIMAL(12, 2),
         allowNull: false,
       },
       currency: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(3),
         defaultValue: 'USD',
       },
-      shippingAddress: {
-        type: DataTypes.JSON,
-        allowNull: true,
-      },
-      notes: {
-        type: DataTypes.TEXT,
+      paymentProvider: {
+        type: DataTypes.STRING,
         allowNull: true,
       },
       createdAt: {
@@ -64,9 +70,9 @@ export const initOrder = (sequelize: Sequelize) => {
       tableName: 'orders',
       timestamps: true,
       indexes: [
-        { fields: ['userId'] },
+        { fields: ['buyerId'] },
+        { fields: ['email'] },
         { fields: ['status'] },
-        { fields: ['orderNumber'] },
       ],
     }
   );

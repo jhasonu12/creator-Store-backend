@@ -1,26 +1,22 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
-export enum SubscriptionStatus {
-  ACTIVE = 'ACTIVE',
-  CANCELLED = 'CANCELLED',
-}
-
-export class Subscription extends Model {
+export class CourseProgress extends Model {
   declare id: string;
   declare userId: string;
-  declare productId: string;
-  declare status: SubscriptionStatus;
-  declare nextBillingDate: Date;
+  declare courseId: string;
+  declare lastLessonId: string | null;
+  declare completedLessons: object;
+  declare progressPercentage: number;
   declare createdAt: Date;
   declare updatedAt: Date;
 
   // Associations
   declare getUser: any;
-  declare getProduct: any;
+  declare getCourse: any;
 }
 
-export const initSubscription = (sequelize: Sequelize) => {
-  Subscription.init(
+export const initCourseProgress = (sequelize: Sequelize) => {
+  CourseProgress.init(
     {
       id: {
         type: DataTypes.UUID,
@@ -31,17 +27,21 @@ export const initSubscription = (sequelize: Sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      productId: {
+      courseId: {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      status: {
-        type: DataTypes.ENUM(...Object.values(SubscriptionStatus)),
-        defaultValue: SubscriptionStatus.ACTIVE,
+      lastLessonId: {
+        type: DataTypes.UUID,
+        allowNull: true,
       },
-      nextBillingDate: {
-        type: DataTypes.DATE,
-        allowNull: false,
+      completedLessons: {
+        type: DataTypes.JSONB,
+        defaultValue: {},
+      },
+      progressPercentage: {
+        type: DataTypes.DECIMAL(5, 2),
+        defaultValue: 0,
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -54,15 +54,15 @@ export const initSubscription = (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'subscriptions',
+      tableName: 'course_progress',
       timestamps: true,
       indexes: [
         { fields: ['userId'] },
-        { fields: ['productId'] },
-        { fields: ['status'] },
+        { fields: ['courseId'] },
+        { fields: ['userId', 'courseId'], unique: true },
       ],
     }
   );
 
-  return Subscription;
+  return CourseProgress;
 };

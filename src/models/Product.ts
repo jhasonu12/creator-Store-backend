@@ -1,23 +1,37 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
+export enum ProductType {
+  DIGITAL = 'DIGITAL',
+  COURSE = 'COURSE',
+  SUBSCRIPTION = 'SUBSCRIPTION',
+}
+
+export enum ProductStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  ARCHIVED = 'ARCHIVED',
+}
+
 export class Product extends Model {
   declare id: string;
   declare creatorId: string;
+  declare type: ProductType;
   declare title: string;
-  declare slug: string;
-  declare description: string | null;
+  declare description: string;
   declare price: number;
   declare currency: string;
-  declare images: string[];
-  declare status: string;
-  declare category: string | null;
-  declare tags: string[];
-  declare rating: number;
-  declare totalReviews: number;
-  declare stock: number | null;
-  declare isDigital: boolean;
+  declare thumbnailUrl: string | null;
+  declare status: ProductStatus;
   declare createdAt: Date;
   declare updatedAt: Date;
+
+  // Associations
+  declare getCreatorProfile: any;
+  declare getProductFiles: any;
+  declare getCourse: any;
+  declare getOrderItems: any;
+  declare getSponsoredProduct: any;
+  declare getAnalyticsEvents: any;
 }
 
 export const initProduct = (sequelize: Sequelize) => {
@@ -32,57 +46,33 @@ export const initProduct = (sequelize: Sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      title: {
-        type: DataTypes.STRING,
+      type: {
+        type: DataTypes.ENUM(...Object.values(ProductType)),
         allowNull: false,
       },
-      slug: {
+      title: {
         type: DataTypes.STRING,
         allowNull: false,
       },
       description: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: false,
       },
       price: {
-        type: DataTypes.FLOAT,
+        type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
       },
       currency: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(3),
         defaultValue: 'USD',
       },
-      images: {
-        type: DataTypes.JSON,
-        defaultValue: [],
+      thumbnailUrl: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
       status: {
-        type: DataTypes.STRING,
-        defaultValue: 'draft',
-      },
-      category: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      tags: {
-        type: DataTypes.JSON,
-        defaultValue: [],
-      },
-      rating: {
-        type: DataTypes.FLOAT,
-        defaultValue: 0,
-      },
-      totalReviews: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
-      stock: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      isDigital: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+        type: DataTypes.ENUM(...Object.values(ProductStatus)),
+        defaultValue: ProductStatus.DRAFT,
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -100,8 +90,7 @@ export const initProduct = (sequelize: Sequelize) => {
       indexes: [
         { fields: ['creatorId'] },
         { fields: ['status'] },
-        { fields: ['category'] },
-        { fields: ['creatorId', 'slug'], unique: true },
+        { fields: ['type'] },
       ],
     }
   );

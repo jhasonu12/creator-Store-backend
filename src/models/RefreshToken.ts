@@ -1,43 +1,41 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
-export class OrderItem extends Model {
+export class RefreshToken extends Model {
   declare id: string;
-  declare orderId: string;
-  declare productId: string;
-  declare creatorId: string;
-  declare price: number;
+  declare userId: string;
+  declare tokenHash: string;
+  declare expiresAt: Date;
+  declare revoked: boolean;
   declare createdAt: Date;
   declare updatedAt: Date;
 
   // Associations
-  declare getOrder: any;
-  declare getProduct: any;
-  declare getCreatorProfile: any;
+  declare getUser: any;
 }
 
-export const initOrderItem = (sequelize: Sequelize) => {
-  OrderItem.init(
+export const initRefreshToken = (sequelize: Sequelize) => {
+  RefreshToken.init(
     {
       id: {
         type: DataTypes.UUID,
         primaryKey: true,
         defaultValue: DataTypes.UUIDV4,
       },
-      orderId: {
+      userId: {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      productId: {
-        type: DataTypes.UUID,
+      tokenHash: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
-      creatorId: {
-        type: DataTypes.UUID,
+      expiresAt: {
+        type: DataTypes.DATE,
         allowNull: false,
       },
-      price: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
+      revoked: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -50,15 +48,14 @@ export const initOrderItem = (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'order_items',
+      tableName: 'refresh_tokens',
       timestamps: true,
       indexes: [
-        { fields: ['orderId'] },
-        { fields: ['productId'] },
-        { fields: ['creatorId'] },
+        { fields: ['userId'] },
+        { fields: ['expiresAt'] },
       ],
     }
   );
 
-  return OrderItem;
+  return RefreshToken;
 };

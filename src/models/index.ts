@@ -1,110 +1,194 @@
 import { Sequelize } from 'sequelize';
 import { initUser } from './User';
-import { initProfile } from './Profile';
-import { initCreator } from './Creator';
-import { initSubscriptionTier } from './SubscriptionTier';
-import { initSubscriber } from './Subscriber';
-import { initSubscription } from './Subscription';
+import { initRefreshToken } from './RefreshToken';
+import { initCreatorProfile } from './CreatorProfile';
+import { initStoreSlug } from './StoreSlug';
 import { initProduct } from './Product';
+import { initProductFile } from './ProductFile';
+import { initCourse } from './Course';
+import { initCourseSection } from './CourseSection';
+import { initCourseLesson } from './CourseLesson';
+import { initCourseProgress } from './CourseProgress';
 import { initOrder } from './Order';
 import { initOrderItem } from './OrderItem';
 import { initPayment } from './Payment';
-import { initReview } from './Review';
-import { initActivityLog } from './ActivityLog';
+import { initSubscription } from './Subscription';
+import { initSponsoredProduct } from './SponsoredProduct';
+import { initAdImpression } from './AdImpression';
+import { initCoupon } from './Coupon';
+import { initAnalyticsEvent } from './AnalyticsEvent';
+import { initMarketplaceProduct } from './MarketplaceProduct';
 
 export const initializeModels = (sequelize: Sequelize) => {
-  // Initialize all models
+  // Initialize all 19 models
   const User = initUser(sequelize);
-  const Profile = initProfile(sequelize);
-  const Creator = initCreator(sequelize);
-  const SubscriptionTier = initSubscriptionTier(sequelize);
-  const Subscriber = initSubscriber(sequelize);
-  const Subscription = initSubscription(sequelize);
+  const RefreshToken = initRefreshToken(sequelize);
+  const CreatorProfile = initCreatorProfile(sequelize);
+  const StoreSlug = initStoreSlug(sequelize);
   const Product = initProduct(sequelize);
+  const ProductFile = initProductFile(sequelize);
+  const Course = initCourse(sequelize);
+  const CourseSection = initCourseSection(sequelize);
+  const CourseLesson = initCourseLesson(sequelize);
+  const CourseProgress = initCourseProgress(sequelize);
   const Order = initOrder(sequelize);
   const OrderItem = initOrderItem(sequelize);
   const Payment = initPayment(sequelize);
-  const Review = initReview(sequelize);
-  const ActivityLog = initActivityLog(sequelize);
+  const Subscription = initSubscription(sequelize);
+  const SponsoredProduct = initSponsoredProduct(sequelize);
+  const AdImpression = initAdImpression(sequelize);
+  const Coupon = initCoupon(sequelize);
+  const AnalyticsEvent = initAnalyticsEvent(sequelize);
+  const MarketplaceProduct = initMarketplaceProduct(sequelize);
 
   // Define associations
-  // User -> Profile (1:1)
-  User.hasOne(Profile, { foreignKey: 'userId', onDelete: 'CASCADE' });
-  Profile.belongsTo(User, { foreignKey: 'userId' });
 
-  // User -> Creator (1:1)
-  User.hasOne(Creator, { foreignKey: 'userId', onDelete: 'CASCADE' });
-  Creator.belongsTo(User, { foreignKey: 'userId' });
+  // === User Associations ===
+  // User -> RefreshToken (1:N)
+  User.hasMany(RefreshToken, { foreignKey: 'userId', onDelete: 'CASCADE' });
+  RefreshToken.belongsTo(User, { foreignKey: 'userId' });
 
-  // User -> Subscriber (1:N) - as subscriber
-  User.hasMany(Subscriber, { foreignKey: 'subscriberId', onDelete: 'CASCADE' });
-  Subscriber.belongsTo(User, { foreignKey: 'subscriberId', as: 'subscriber' });
+  // User -> CreatorProfile (1:1)
+  User.hasOne(CreatorProfile, { foreignKey: 'userId', onDelete: 'CASCADE' });
+  CreatorProfile.belongsTo(User, { foreignKey: 'userId' });
 
-  // Creator -> Subscriber (1:N)
-  Creator.hasMany(Subscriber, { foreignKey: 'creatorId', onDelete: 'CASCADE', as: 'subscribers' });
-  Subscriber.belongsTo(Creator, { foreignKey: 'creatorId', as: 'creator' });
+  // User -> StoreSlug (1:1) - when user is a creator
+  User.hasOne(StoreSlug, { foreignKey: 'creatorId', onDelete: 'CASCADE' });
+  StoreSlug.belongsTo(User, { foreignKey: 'creatorId', as: 'creator' });
+
+  // User -> Product (1:N) - products created by user
+  User.hasMany(Product, { foreignKey: 'creatorId', onDelete: 'CASCADE' });
+  Product.belongsTo(User, { foreignKey: 'creatorId', as: 'creator' });
+
+  // User -> Order (1:N) - buyer orders
+  User.hasMany(Order, { foreignKey: 'buyerId', onDelete: 'SET NULL' });
+  Order.belongsTo(User, { foreignKey: 'buyerId', as: 'buyer' });
 
   // User -> Subscription (1:N)
   User.hasMany(Subscription, { foreignKey: 'userId', onDelete: 'CASCADE' });
   Subscription.belongsTo(User, { foreignKey: 'userId' });
 
-  // SubscriptionTier -> Subscription (1:N)
-  SubscriptionTier.hasMany(Subscription, { foreignKey: 'tierId' });
-  Subscription.belongsTo(SubscriptionTier, { foreignKey: 'tierId', as: 'tier' });
+  // User -> CourseProgress (1:N)
+  User.hasMany(CourseProgress, { foreignKey: 'userId', onDelete: 'CASCADE' });
+  CourseProgress.belongsTo(User, { foreignKey: 'userId' });
 
-  // Creator -> Product (1:N)
-  Creator.hasMany(Product, { foreignKey: 'creatorId', onDelete: 'CASCADE', as: 'products' });
-  Product.belongsTo(Creator, { foreignKey: 'creatorId', as: 'creator' });
+  // User -> AnalyticsEvent (1:N)
+  User.hasMany(AnalyticsEvent, { foreignKey: 'userId', onDelete: 'SET NULL' });
+  AnalyticsEvent.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-  // User -> Order (1:N)
-  User.hasMany(Order, { foreignKey: 'userId', onDelete: 'CASCADE' });
-  Order.belongsTo(User, { foreignKey: 'userId' });
+  // User -> AdImpression (1:N)
+  User.hasMany(AdImpression, { foreignKey: 'userId', onDelete: 'SET NULL' });
+  AdImpression.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+  // === Product Associations ===
+  // Product -> ProductFile (1:N) - for digital files
+  Product.hasMany(ProductFile, { foreignKey: 'productId', onDelete: 'CASCADE' });
+  ProductFile.belongsTo(Product, { foreignKey: 'productId' });
+
+  // Product -> Course (1:1) - when product type is COURSE
+  Product.hasOne(Course, { foreignKey: 'productId', onDelete: 'CASCADE' });
+  Course.belongsTo(Product, { foreignKey: 'productId' });
+
+  // Product -> OrderItem (1:N)
+  Product.hasMany(OrderItem, { foreignKey: 'productId', onDelete: 'CASCADE' });
+  OrderItem.belongsTo(Product, { foreignKey: 'productId' });
+
+  // Product -> Subscription (1:N)
+  Product.hasMany(Subscription, { foreignKey: 'productId', onDelete: 'CASCADE' });
+  Subscription.belongsTo(Product, { foreignKey: 'productId' });
+
+  // Product -> SponsoredProduct (1:1)
+  Product.hasOne(SponsoredProduct, { foreignKey: 'productId', onDelete: 'CASCADE' });
+  SponsoredProduct.belongsTo(Product, { foreignKey: 'productId' });
+
+  // Product -> AnalyticsEvent (1:N)
+  Product.hasMany(AnalyticsEvent, { foreignKey: 'productId', onDelete: 'SET NULL' });
+  AnalyticsEvent.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+
+  // Product -> MarketplaceProduct (1:1)
+  Product.hasOne(MarketplaceProduct, { foreignKey: 'productId', onDelete: 'CASCADE' });
+  MarketplaceProduct.belongsTo(Product, { foreignKey: 'productId' });
+
+  // === Course/Lesson Associations ===
+  // Course -> CourseSection (1:N)
+  Course.hasMany(CourseSection, { foreignKey: 'courseId', onDelete: 'CASCADE' });
+  CourseSection.belongsTo(Course, { foreignKey: 'courseId' });
+
+  // CourseSection -> CourseLesson (1:N)
+  CourseSection.hasMany(CourseLesson, { foreignKey: 'sectionId', onDelete: 'CASCADE' });
+  CourseLesson.belongsTo(CourseSection, { foreignKey: 'sectionId' });
+
+  // Course -> CourseProgress (1:N)
+  Course.hasMany(CourseProgress, { foreignKey: 'courseId', onDelete: 'CASCADE' });
+  CourseProgress.belongsTo(Course, { foreignKey: 'courseId' });
+
+  // === Order/Payment Associations ===
   // Order -> OrderItem (1:N)
   Order.hasMany(OrderItem, { foreignKey: 'orderId', onDelete: 'CASCADE', as: 'items' });
   OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
 
-  // Product -> OrderItem (1:N)
-  Product.hasMany(OrderItem, { foreignKey: 'productId' });
-  OrderItem.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
-
   // Order -> Payment (1:1)
-  Order.hasOne(Payment, { foreignKey: 'orderId', onDelete: 'CASCADE', as: 'payment' });
+  Order.hasOne(Payment, { foreignKey: 'orderId', onDelete: 'CASCADE' });
   Payment.belongsTo(Order, { foreignKey: 'orderId' });
 
-  // Product -> Review (1:N)
-  Product.hasMany(Review, { foreignKey: 'productId', onDelete: 'CASCADE' });
-  Review.belongsTo(Product, { foreignKey: 'productId' });
+  // CreatorProfile -> OrderItem (1:N)
+  CreatorProfile.hasMany(OrderItem, { foreignKey: 'creatorId', onDelete: 'SET NULL' });
+  OrderItem.belongsTo(CreatorProfile, { foreignKey: 'creatorId', as: 'creator' });
 
-  // User -> Review (1:N)
-  User.hasMany(Review, { foreignKey: 'userId', onDelete: 'CASCADE' });
-  Review.belongsTo(User, { foreignKey: 'userId' });
+  // === Marketplace/Ads Associations ===
+  // CreatorProfile -> SponsoredProduct (1:N)
+  CreatorProfile.hasMany(SponsoredProduct, { foreignKey: 'creatorId', onDelete: 'CASCADE' });
+  SponsoredProduct.belongsTo(CreatorProfile, { foreignKey: 'creatorId', as: 'creator' });
+
+  // SponsoredProduct -> AdImpression (1:N)
+  SponsoredProduct.hasMany(AdImpression, { foreignKey: 'sponsoredProductId', onDelete: 'CASCADE' });
+  AdImpression.belongsTo(SponsoredProduct, { foreignKey: 'sponsoredProductId' });
+
+  // === Analytics Association ===
+  // CreatorProfile -> AnalyticsEvent (1:N)
+  CreatorProfile.hasMany(AnalyticsEvent, { foreignKey: 'creatorId', onDelete: 'SET NULL' });
+  AnalyticsEvent.belongsTo(CreatorProfile, { foreignKey: 'creatorId', as: 'creator' });
 
   return {
     User,
-    Profile,
-    Creator,
-    SubscriptionTier,
-    Subscriber,
-    Subscription,
+    RefreshToken,
+    CreatorProfile,
+    StoreSlug,
     Product,
+    ProductFile,
+    Course,
+    CourseSection,
+    CourseLesson,
+    CourseProgress,
     Order,
     OrderItem,
     Payment,
-    Review,
-    ActivityLog,
+    Subscription,
+    SponsoredProduct,
+    AdImpression,
+    Coupon,
+    AnalyticsEvent,
+    MarketplaceProduct,
   };
 };
 
-export * from './User';
-export * from './Profile';
-export * from './Creator';
-export * from './SubscriptionTier';
-export * from './Subscriber';
-export * from './Subscription';
-export * from './Product';
-export * from './Order';
+// Export all model classes and enums
+export { User, UserRole } from './User';
+export * from './RefreshToken';
+export * from './CreatorProfile';
+export { StoreSlug, StoreSlugStatus } from './StoreSlug';
+export { Product, ProductType, ProductStatus } from './Product';
+export * from './ProductFile';
+export * from './Course';
+export * from './CourseSection';
+export * from './CourseLesson';
+export * from './CourseProgress';
+export { Order, OrderStatus } from './Order';
 export * from './OrderItem';
-export * from './Payment';
-export * from './Review';
-export * from './ActivityLog';
+export { Payment, PaymentStatus } from './Payment';
+export { Subscription, SubscriptionStatus } from './Subscription';
+export { SponsoredProduct, SponsoredProductStatus, PricingModel } from './SponsoredProduct';
+export * from './AdImpression';
+export { Coupon, DiscountType } from './Coupon';
+export * from './AnalyticsEvent';
+export * from './MarketplaceProduct';

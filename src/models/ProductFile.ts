@@ -1,42 +1,35 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
-export class OrderItem extends Model {
+export class ProductFile extends Model {
   declare id: string;
-  declare orderId: string;
   declare productId: string;
-  declare creatorId: string;
-  declare price: number;
+  declare fileUrl: string;
+  declare fileSize: number;
   declare createdAt: Date;
   declare updatedAt: Date;
 
   // Associations
-  declare getOrder: any;
   declare getProduct: any;
-  declare getCreatorProfile: any;
 }
 
-export const initOrderItem = (sequelize: Sequelize) => {
-  OrderItem.init(
+export const initProductFile = (sequelize: Sequelize) => {
+  ProductFile.init(
     {
       id: {
         type: DataTypes.UUID,
         primaryKey: true,
         defaultValue: DataTypes.UUIDV4,
       },
-      orderId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-      },
       productId: {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      creatorId: {
-        type: DataTypes.UUID,
+      fileUrl: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
-      price: {
-        type: DataTypes.DECIMAL(10, 2),
+      fileSize: {
+        type: DataTypes.BIGINT,
         allowNull: false,
       },
       createdAt: {
@@ -50,15 +43,11 @@ export const initOrderItem = (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'order_items',
+      tableName: 'product_files',
       timestamps: true,
-      indexes: [
-        { fields: ['orderId'] },
-        { fields: ['productId'] },
-        { fields: ['creatorId'] },
-      ],
+      indexes: [{ fields: ['productId'] }],
     }
   );
 
-  return OrderItem;
+  return ProductFile;
 };

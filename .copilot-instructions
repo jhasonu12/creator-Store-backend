@@ -5,23 +5,55 @@ Creator World Backend is a production-grade Node.js/Express API for a Stan-store
 
 ## Core Architecture Principles
 
-### 1. Layered Architecture
+### 1. Feature-Based Module Architecture
 ```
-Routes → Controllers → Services → Repositories → Database
-```
-- **Routes**: Handle HTTP endpoints and routing
-- **Controllers**: Parse requests, call services, format responses
-- **Services**: Contain business logic and orchestrate repositories
-- **Repositories**: Data access layer, interact with Prisma ORM
-- **Database**: PostgreSQL via Prisma
+Modules (Features)
+├── Auth, Users, Products, Orders, etc.
+└── Each module: Routes → Controllers → Services → Models
 
-### 2. Dependency Injection Pattern
-- Services depend on repositories
+Common
+├── Middleware (Auth, Validation, Error handling, Logging)
+└── Utils (Helpers, Cache, Logger, Response, Pagination)
+
+Config
+└── Database, Redis, Environment
+```
+
+**Key Principle**: Group related features into modules, not layers. Each module is self-contained with its own controller, service, and routes.
+
+### 2. Module Structure
+```
+src/modules/{moduleName}/
+├── {moduleName}.controller.ts  - HTTP handlers
+├── {moduleName}.service.ts     - Business logic
+├── {moduleName}.routes.ts      - Route definitions
+└── index.ts                    - Module exports
+```
+
+### 3. Shared Resources
+```
+src/common/
+├── middleware/                 - Global/reusable middleware
+│   ├── auth.middleware.ts      - Authentication
+│   ├── validation.middleware.ts - Request validation
+│   ├── errorHandler.middleware.ts - Error handling
+│   ├── logger.middleware.ts    - HTTP logging
+│   └── role.middleware.ts      - Role-based access
+└── utils/                      - Shared utilities
+    ├── response.ts             - Response formatting
+    ├── helpers.ts              - Utility functions
+    ├── logger.ts               - Winston logger
+    ├── cache.ts                - Redis caching
+    └── pagination.ts           - Pagination helpers
+```
+
+### 4. Dependency Injection Pattern
+- Services depend on models and utilities
 - Controllers depend on services
 - Instantiate new instances in controllers for simplicity
 - Can be refactored to DI container if needed
 
-### 3. Type Safety
+### 5. Type Safety
 - All functions have explicit return types
 - Strict TypeScript mode enabled
 - Use interfaces and enums for domain models
@@ -31,23 +63,37 @@ Routes → Controllers → Services → Repositories → Database
 
 ### File Naming Conventions
 ```
-feature.controller.ts      # Controllers
-feature.service.ts         # Services
-feature.repository.ts      # Repositories
-feature.dto.ts            # Data Transfer Objects
-feature.validator.ts      # Request validators
-feature.routes.ts         # Routes
+{feature}.controller.ts      # Controllers
+{feature}.service.ts         # Services
+{feature}.routes.ts          # Routes
+{feature}.dto.ts            # Data Transfer Objects
+{feature}.validator.ts      # Request validators
 ```
 
 ### Import Paths (TypeScript Aliases)
 ```typescript
 // ✅ Use path aliases
-import { UserService } from '@services/user.service';
-import { logger } from '@utils/logger';
+import { AuthService } from '@modules/auth/auth.service';
+import { UserController } from '@modules/users/user.controller';
+import { authMiddleware } from '@common/middleware/auth.middleware';
+import { sendResponse, AppError } from '@common/utils/response';
+import { logger } from '@common/utils/logger';
 import { config } from '@config/environment';
 
 // ❌ Avoid relative imports
-import { UserService } from '../../services/user.service';
+import { AuthService } from '../../modules/auth/auth.service';
+```
+
+### Available Path Aliases
+```typescript
+@config/*       // src/config/
+@common/*       // src/common/
+@modules/*      // src/modules/
+@models/*       // src/models/
+@constants/*    // src/constants/
+@dto/*          // src/dto/
+@validators/*   // src/validators/
+@types/*        // src/types/
 ```
 
 ## Creating New Features
@@ -80,36 +126,14 @@ export const createFeatureSchema = Joi.object({
 });
 ```
 
-### Step 3: Build Repository (Data Access)
+### Step 3: Create Service (Business Logic)
 ```typescript
-// src/repositories/feature.repository.ts
-import { getPrismaClient } from '@config/database';
-import { Feature } from '@prisma/client';
-
-export class FeatureRepository {
-  private prisma = getPrismaClient();
-
-  async findById(id: string): Promise<Feature | null> {
-    return this.prisma.feature.findUnique({ where: { id } });
-  }
-
-  async create(data: any): Promise<Feature> {
-    return this.prisma.feature.create({ data });
-  }
-
-  // ... other CRUD methods
-}
-```
-
-### Step 4: Create Service (Business Logic)
-```typescript
-// src/services/feature.service.ts
-import { FeatureRepository } from '@repositories/feature.repository';
+// src/modules/feature/feature.service.ts
 import { CreateFeatureDTO } from '@dto/feature.dto';
-import { AppError } from '@utils/errorHandler';
+import { AppError } from '@common/utils/response';
+import { Feature } from '@models/Feature';
 
 export class FeatureService {
-  private repository = new FeatureRepository();
 
   async createFeature(dto: CreateFeatureDTO): Promise<any> {
     // Validate business rules
@@ -117,8 +141,8 @@ export class FeatureService {
       throw new AppError(400, 'Name is required');
     }
 
-    // Call repository
-    const feature = await this.repository.create(dto);
+    // Use models (Sequelize)
+    const feature = await Feature.create(dto);
 
     return this.toResponseDTO(feature);
   }
@@ -133,12 +157,12 @@ export class FeatureService {
 }
 ```
 
-### Step 5: Create Controller (HTTP Handlers)
+### Step 4: Create Controller (HTTP Handlers)
 ```typescript
-// src/controllers/feature.controller.ts
+// src/modules/feature/feature.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import { FeatureService } from '@services/feature.service';
-import { asyncHandler, sendResponse, AppError } from '@utils/errorHandler';
+import { FeatureService } from './feature.service';
+import { asyncHandler, sendResponse, AppError } from '@common/utils/response';
 import { RESPONSE_MESSAGES } from '@constants/messages';
 
 export class FeatureController {
@@ -162,14 +186,14 @@ export class FeatureController {
 }
 ```
 
-### Step 6: Create Routes
+### Step 5: Create Routes
 ```typescript
-// src/routes/feature.routes.ts
+// src/modules/feature/feature.routes.ts
 import { Router } from 'express';
-import { FeatureController } from '@controllers/feature.controller';
-import { validateRequest } from '@middleware/validation';
+import { FeatureController } from './feature.controller';
+import { validateRequest } from '@common/middleware/validation.middleware';
 import { createFeatureSchema } from '@validators/feature.validator';
-import { authMiddleware } from '@middleware/auth';
+import { authMiddleware } from '@common/middleware/auth.middleware';
 
 const router = Router();
 const controller = new FeatureController();
@@ -179,7 +203,12 @@ const controller = new FeatureController();
  * @desc Create a new feature
  * @access Private
  */
-router.post('/', authMiddleware, validateRequest(createFeatureSchema), controller.createFeature);
+router.post(
+  '/', 
+  authMiddleware, 
+  validateRequest(createFeatureSchema), 
+  controller.createFeature
+);
 
 /**
  * @route GET /features/:id
@@ -191,10 +220,18 @@ router.get('/:id', controller.getFeature);
 export default router;
 ```
 
+### Step 6: Create Module Index (Exports)
+```typescript
+// src/modules/feature/index.ts
+export { FeatureService } from './feature.service';
+export { FeatureController } from './feature.controller';
+export { default as featureRoutes } from './feature.routes';
+```
+
 ### Step 7: Register Routes in App
 ```typescript
 // src/app.ts
-import featureRoutes from '@routes/feature.routes';
+import { featureRoutes } from '@modules/feature';
 
 // Add after other route registrations
 app.use(`/api/${config.app.apiVersion}/features`, featureRoutes);
@@ -205,6 +242,8 @@ app.use(`/api/${config.app.apiVersion}/features`, featureRoutes);
 ### Using AppError
 ```typescript
 // Throw custom errors with status codes
+import { AppError } from '@common/utils/response';
+
 throw new AppError(404, 'Resource not found');
 throw new AppError(400, 'Validation failed', true, { field: 'email' });
 
@@ -226,12 +265,12 @@ throw new AppError(400, 'Validation failed', true, { field: 'email' });
 
 ### Use Redis Cache for Performance
 ```typescript
-import { cacheGetOrSet, cacheSet, cacheDel } from '@utils/cache';
+import { cacheGetOrSet, cacheSet, cacheDel } from '@common/utils/cache';
 
 // Automatically cache with fallback
 const user = await cacheGetOrSet(
   `user:${userId}`,
-  () => repository.findById(userId),
+  () => User.findByPk(userId),
   3600 // TTL in seconds
 );
 
@@ -243,6 +282,8 @@ await cacheDel(`user:${userId}`);
 
 ### Request Validation with Joi
 ```typescript
+import { validateRequest } from '@common/middleware/validation.middleware';
+
 // Define schema
 const schema = Joi.object({
   body: Joi.object({
@@ -260,28 +301,35 @@ router.post('/', validateRequest(schema), controller.handler);
 
 ## Database Queries
 
-### Using Prisma
+### Using Sequelize Models
 ```typescript
-// Fetch with relations
-const user = await prisma.user.findUnique({
-  where: { id: userId },
-  include: { profile: true, products: true },
+import { User } from '@models/User';
+
+// Fetch with associations
+const user = await User.findByPk(userId, {
+  include: ['profile', 'products'],
 });
 
 // Pagination
 const { skip, take } = getPaginationParams(page, limit);
-const users = await prisma.user.findMany({ skip, take });
+const users = await User.findAll({ 
+  offset: skip, 
+  limit: take 
+});
 
 // Filtering
-const products = await prisma.product.findMany({
+const products = await Product.findAll({
   where: { creatorId, status: 'published' },
 });
 
-// Transactions
-await prisma.$transaction([
-  prisma.user.update({ ... }),
-  prisma.order.create({ ... }),
-]);
+// Count
+const total = await User.count();
+
+// Update
+await user.update(updateData);
+
+// Delete
+await user.destroy();
 ```
 
 ## Authentication
@@ -289,6 +337,8 @@ await prisma.$transaction([
 ### Protected Routes
 ```typescript
 // Use authMiddleware
+import { authMiddleware } from '@common/middleware/auth.middleware';
+
 router.get('/profile', authMiddleware, controller.getProfile);
 
 // Extract user from request
@@ -297,7 +347,7 @@ const userId = (req as AuthRequest).user.id;
 
 ### JWT Tokens
 ```typescript
-import { generateToken, verifyToken } from '@utils/helpers';
+import { generateToken, verifyToken } from '@common/utils/helpers';
 
 // Generate
 const token = generateToken({
@@ -314,7 +364,7 @@ const decoded = verifyToken(token);
 
 ### Use Winston Logger
 ```typescript
-import { logger } from '@utils/logger';
+import { logger } from '@common/utils/logger';
 
 logger.info('User registered', { userId, email });
 logger.error('Database error', error);
@@ -326,15 +376,15 @@ logger.debug('Processing user request');
 
 ### Unit Test Structure
 ```typescript
-describe('UserService', () => {
-  let service: UserService;
+describe('FeatureService', () => {
+  let service: FeatureService;
 
   beforeEach(() => {
-    service = new UserService();
+    service = new FeatureService();
   });
 
-  it('should create a user', async () => {
-    const result = await service.createUser({ email: 'test@test.com' });
+  it('should create a feature', async () => {
+    const result = await service.createFeature({ name: 'Test' });
     expect(result).toBeDefined();
   });
 });
@@ -365,8 +415,8 @@ const apiKey = config.myFeature.apiKey;
 
 1. **Pagination**: Always paginate large result sets
 2. **Caching**: Cache frequently accessed data in Redis
-3. **Database**: Use indexes, avoid N+1 queries
-4. **Queries**: Select only needed fields with Prisma select
+3. **Database**: Use indexes, eager-load relations, avoid N+1 queries
+4. **Queries**: Select only needed fields or use include/exclude
 5. **Connections**: Use connection pooling (configured in .env)
 
 ## Security Best Practices
@@ -377,6 +427,7 @@ const apiKey = config.myFeature.apiKey;
 4. **CORS**: Whitelist origins in config
 5. **Helmet**: Already configured for security headers
 6. **Environment**: Never commit .env file
+7. **Roles**: Use roleMiddleware for role-based access control
 
 ## Code Quality Standards
 
@@ -400,6 +451,8 @@ npm run type-check  # Find type errors
 
 ### Async Error Handling in Controllers
 ```typescript
+import { asyncHandler, sendResponse, AppError } from '@common/utils/response';
+
 controller = asyncHandler(async (req, res, next) => {
   try {
     const result = await service.method();
@@ -415,6 +468,8 @@ controller = asyncHandler(async (req, res, next) => {
 
 ### Pagination Response
 ```typescript
+import { sendResponse } from '@common/utils/response';
+
 const { data, meta } = await service.getPaginated(page, limit);
 sendResponse(res, 200, 'Success', data, meta);
 ```
@@ -425,41 +480,40 @@ const filters = {
   category: req.query.category,
   search: req.query.search,
 };
-const results = await repository.findWithFilters(filters, page, limit);
+const results = await service.findWithFilters(filters, page, limit);
 ```
 
 ## Extending the API
 
-### Adding a New Entity
+### Adding a New Module
 
-1. Add Prisma model to `schema.prisma`
-2. Run `npm run prisma:migrate`
-3. Create DTO, Validator, Repository, Service, Controller
-4. Create routes and register in app.ts
-5. Add tests
+1. Create directory: `src/modules/{moduleName}/`
+2. Create DTOs in `src/dto/` if needed
+3. Create validators in `src/validators/` if needed
+4. Create service: `{moduleName}.service.ts`
+5. Create controller: `{moduleName}.controller.ts`
+6. Create routes: `{moduleName}.routes.ts`
+7. Create index: `index.ts` with exports
+8. Register in `src/app.ts`
+9. Add tests
 
-### Adding a New Middleware
+### Adding Middleware
 
-1. Create in `src/middleware/`
+1. Create in `src/common/middleware/` with `.middleware.ts` suffix
 2. Import in routes or globally in `app.ts`
 3. Document its purpose
 
-### Adding a New Utility
+### Adding Utilities
 
-1. Create in `src/utils/`
+1. Create in `src/common/utils/`
 2. Export functions
-3. Use via `@utils/` alias
+3. Use via `@common/utils/` alias
 
 ## Debugging
 
 ### Development Mode
 ```bash
 npm run dev  # Includes source maps and verbose logging
-```
-
-### Prisma Studio
-```bash
-npm run prisma:studio  # Visual database browser
 ```
 
 ### Check Logs
@@ -503,10 +557,11 @@ logs/all.log    # All events
 - [ ] Setup monitoring and alerting
 - [ ] Configure SSL/TLS
 - [ ] Setup CI/CD pipeline
+- [ ] Review security settings
 
 ### Database Migrations
 ```bash
-npm run prisma:migrate:deploy  # Apply pending migrations
+npm run db:migrate  # Apply pending migrations
 ```
 
 ## Useful Commands Reference
@@ -519,9 +574,9 @@ npm test                 # Run all tests
 npm run lint             # Check code style
 npm run lint:fix         # Auto-fix code style
 npm run format           # Format code
-npm run prisma:migrate   # Create new migration
-npm run prisma:studio    # Open database GUI
-npm run prisma:seed      # Seed database
+npm run type-check       # Check types
+npm run db:migrate       # Run migrations
+npm run db:seed          # Seed database
 ```
 
 ---
@@ -529,14 +584,17 @@ npm run prisma:seed      # Seed database
 ## Quick Tips
 
 1. Always use DTOs for API responses
-2. Validate inputs in validators, not in services
-3. Use repositories for all database access
+2. Validate inputs with Joi validators, not in services
+3. Use models (Sequelize) for all database access
 4. Throw AppError for business logic errors
-5. Cache expensive operations
+5. Cache expensive operations with Redis
 6. Log important events and errors
 7. Test before pushing code
-8. Follow the established patterns
-9. Use path aliases (@services, @utils, etc.)
+8. Follow the established module patterns
+9. Use path aliases (@modules, @common, @config, etc.)
 10. Keep functions small and focused
+11. Group related features in modules
+12. Place shared code in @common directory
 
 This ensures maintainability, scalability, and consistency across the codebase.
+

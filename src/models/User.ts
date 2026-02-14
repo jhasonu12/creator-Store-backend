@@ -1,5 +1,11 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
+export enum UserRole {
+  USER = 'USER',
+  CREATOR = 'CREATOR',
+  ADMIN = 'ADMIN',
+}
+
 export class User extends Model {
   declare id: string;
   declare email: string;
@@ -9,6 +15,8 @@ export class User extends Model {
   declare lastName: string | null;
   declare avatar: string | null;
   declare bio: string | null;
+  declare role: UserRole;
+  declare isVerified: boolean;
   declare isActive: boolean;
   declare isEmailVerified: boolean;
   declare emailVerificationToken: string | null;
@@ -18,10 +26,11 @@ export class User extends Model {
 
   // Associations
   declare getProfile: any;
-  declare getCreator: any;
-  declare getSubscribers: any;
-  declare getSubscriptions: any;
+  declare getCreatorProfile: any;
+  declare getRefreshTokens: any;
   declare getOrders: any;
+  declare getSubscriptions: any;
+  declare getAnalyticsEvents: any;
   declare getReviews: any;
 }
 
@@ -63,6 +72,14 @@ export const initUser = (sequelize: Sequelize) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      role: {
+        type: DataTypes.ENUM(...Object.values(UserRole)),
+        defaultValue: UserRole.USER,
+      },
+      isVerified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
       isActive: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
@@ -93,8 +110,8 @@ export const initUser = (sequelize: Sequelize) => {
       tableName: 'users',
       timestamps: true,
       indexes: [
-        { fields: ['email'] },
         { fields: ['username'] },
+        { fields: ['role'] },
       ],
     }
   );

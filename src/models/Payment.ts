@@ -1,17 +1,21 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
+export enum PaymentStatus {
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+}
+
 export class Payment extends Model {
   declare id: string;
   declare orderId: string;
-  declare amount: number;
-  declare currency: string;
-  declare status: string;
-  declare paymentMethod: string | null;
-  declare stripePaymentId: string | null;
-  declare stripeCustomerId: string | null;
-  declare failureReason: string | null;
+  declare providerPaymentId: string;
+  declare status: PaymentStatus;
+  declare rawResponse: object;
   declare createdAt: Date;
   declare updatedAt: Date;
+
+  // Associations
+  declare getOrder: any;
 }
 
 export const initPayment = (sequelize: Sequelize) => {
@@ -27,33 +31,17 @@ export const initPayment = (sequelize: Sequelize) => {
         allowNull: false,
         unique: true,
       },
-      amount: {
-        type: DataTypes.FLOAT,
+      providerPaymentId: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
-      currency: {
-        type: DataTypes.STRING,
-        defaultValue: 'USD',
-      },
       status: {
-        type: DataTypes.STRING,
-        defaultValue: 'pending',
+        type: DataTypes.ENUM(...Object.values(PaymentStatus)),
+        allowNull: false,
       },
-      paymentMethod: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      stripePaymentId: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      stripeCustomerId: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      failureReason: {
-        type: DataTypes.TEXT,
-        allowNull: true,
+      rawResponse: {
+        type: DataTypes.JSONB,
+        defaultValue: {},
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -70,7 +58,7 @@ export const initPayment = (sequelize: Sequelize) => {
       timestamps: true,
       indexes: [
         { fields: ['orderId'] },
-        { fields: ['stripePaymentId'] },
+        { fields: ['providerPaymentId'] },
       ],
     }
   );

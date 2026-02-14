@@ -6,14 +6,14 @@ import morgan from 'morgan';
 
 import { config } from '@config/environment';
 import { initRedis } from '@config/redis';
-import { requestLogger } from '@middleware/logger';
-import { errorHandler } from '@middleware/errorHandler';
+import { requestLogger } from '@common/middleware/logger.middleware';
+import { errorHandler } from '@common/middleware/errorHandler.middleware';
 
-import authRoutes from '@routes/auth.routes';
-import userRoutes from '@routes/user.routes';
+import authRoutes from '@modules/auth/auth.routes';
+import userRoutes from '@modules/users/user.routes';
 
-import { logger } from '@utils/logger';
-import { sendResponse } from '@utils/errorHandler';
+import { logger } from '@common/utils/logger';
+import { sendResponse } from '@common/utils/response';
 
 export const createApp = (): Express => {
   const app = express();
