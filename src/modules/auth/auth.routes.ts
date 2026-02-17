@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { AuthController } from './auth.controller';
 import { validateRequest } from '@common/middleware/validation.middleware';
-import { createUserSchema, loginSchema } from '@validators/user.validator';
+import { loginSchema, creatorSignupSchema, refreshTokenSchema, createUserSchema } from '@validators/user.validator';
 import { authMiddleware } from '@common/middleware/auth.middleware';
 
 const router = Router();
@@ -19,7 +19,7 @@ router.post('/signup', validateRequest(createUserSchema), authController.signup)
  * @desc Register a new creator
  * @access Public
  */
-router.post('/creator-signup', authController.signupAsCreator);
+router.post('/creator-signup', validateRequest(creatorSignupSchema), authController.signupAsCreator);
 
 /**
  * @route POST /auth/login
@@ -33,7 +33,14 @@ router.post('/login', validateRequest(loginSchema), authController.login);
  * @desc Refresh access token
  * @access Public
  */
-router.post('/refresh', authController.refreshToken);
+router.post('/refresh', validateRequest(refreshTokenSchema), authController.refreshToken);
+
+/**
+ * @route GET /auth/me
+ * @desc Get current authenticated user
+ * @access Private
+ */
+router.get('/me', authMiddleware, authController.getMe);
 
 /**
  * @route POST /auth/logout

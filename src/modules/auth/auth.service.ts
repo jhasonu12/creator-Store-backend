@@ -1,10 +1,10 @@
 import { Sequelize } from 'sequelize';
+import * as jwt from 'jsonwebtoken';
 import { User, UserRole } from '@models/User';
 import { RefreshToken } from '@models/RefreshToken';
 import { CreatorProfile } from '@models/CreatorProfile';
 import { StoreSlug, StoreSlugStatus } from '@models/StoreSlug';
-import { AnalyticsEvent } from '@models/AnalyticsEvent';
-import { CreateUserDTO, LoginDTO } from '@dto/user.dto';
+import { LoginDTO } from '@dto/user.dto';
 import {
   hashPassword,
   comparePasswords,
@@ -13,16 +13,103 @@ import {
   hashToken,
 } from '@common/utils/helpers';
 import { AppError } from '@common/utils/response';
-import { cacheSet, cacheGet, cacheDel } from '@common/utils/cache';
+import { cacheDel } from '@common/utils/cache';
 import { getSequelizeInstance } from '@config/database';
 import { AnalyticsService } from '@modules/analytics';
-import { logger } from '@common/utils/logger';
 
 export class AuthService {
   private sequelize: Sequelize;
 
   constructor() {
     this.sequelize = getSequelizeInstance();
+  }
+
+  /**
+   * Basic user signup
+   * Creates a new user with USER role
+   */
+  async signup(data: {
+    email: string;
+    username: string;
+    password: string;
+  }): Promise<{
+    user: {
+      id: string;
+      email: string;
+      username: string;
+      role: string;
+    };
+    accessToken: string;
+    refreshToken: string;
+  }> {
+    // Check if email/username already exists
+    const existingUser = await User.findOne({
+      where: { email: data.email },
+    });
+    if (existingUser) {
+      throw new AppError(409, 'User with this email already exists');
+    }
+
+    const existingUsername = await User.findOne({
+      where: { username: data.username },
+    });
+    if (existingUsername) {
+      throw new AppError(409, 'Username already taken');
+    }
+
+    // Create user with USER role
+    const hashedPassword = await hashPassword(data.password);
+    const user = await User.create({
+      email: data.email,
+      username: data.username,
+      password: hashedPassword,
+      role: UserRole.USER,
+      isEmailVerified: false,
+      isVerified: false,
+    });
+
+    // Generate tokens
+    const accessToken = generateToken({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+    });
+
+    const refreshTokenStr = generateRefreshToken({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+    });
+
+    // Create refresh token record
+    const tokenHash = await hashToken(refreshTokenStr);
+    await RefreshToken.create({
+      userId: user.id,
+      tokenHash,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      revoked: false,
+    });
+
+    // Log analytics event
+    AnalyticsService.trackEvent('USER_REGISTERED', {
+      userId: user.id,
+      metadata: {
+        role: 'USER',
+      },
+    });
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+      },
+      accessToken,
+      refreshToken: refreshTokenStr,
+    };
   }
 
   /**
@@ -37,7 +124,21 @@ export class AuthService {
     fullName: string;
     timezone?: string;
     countryCode?: string;
-  }): Promise<any> {
+  }): Promise<{
+    user: {
+      id: string;
+      email: string;
+      username: string;
+      role: string;
+      creatorProfile?: {
+        fullName: string;
+        timezone: string;
+      };
+      storeSlug?: string;
+    };
+    accessToken: string;
+    refreshToken: string;
+  }> {
     const transaction = await this.sequelize.transaction();
 
     try {
@@ -125,7 +226,7 @@ export class AuthService {
 
       // 7. Create refresh token record
       const tokenHash = await hashToken(refreshTokenStr);
-      const refreshTokenRecord = await RefreshToken.create(
+      await RefreshToken.create(
         {
           userId: user.id,
           tokenHash,
@@ -170,99 +271,18 @@ export class AuthService {
   }
 
   /**
-   * Signup as regular user
-   */
-  async signup(data: CreateUserDTO): Promise<any> {
-    const transaction = await this.sequelize.transaction();
-
-    try {
-      // Check if user already exists
-      const existingUser = await User.findOne({
-        where: { email: data.email },
-        transaction,
-      });
-      if (existingUser) {
-        throw new AppError(409, 'User with this email already exists');
-      }
-
-      const existingUsername = await User.findOne({
-        where: { username: data.username },
-        transaction,
-      });
-      if (existingUsername) {
-        throw new AppError(409, 'Username already taken');
-      }
-
-      // Hash password
-      const hashedPassword = await hashPassword(data.password);
-
-      // Create user with USER role
-      const user = await User.create(
-        {
-          email: data.email,
-          username: data.username,
-          password: hashedPassword,
-          role: UserRole.USER,
-          isEmailVerified: false,
-          isVerified: false,
-        },
-        { transaction }
-      );
-
-      // Generate tokens
-      const accessToken = generateToken({
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-      });
-
-      const refreshTokenStr = generateRefreshToken({
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-      });
-
-      // Create refresh token record
-      const tokenHash = await hashToken(refreshTokenStr);
-      await RefreshToken.create(
-        {
-          userId: user.id,
-          tokenHash,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-          revoked: false,
-        },
-        { transaction }
-      );
-
-      // Log analytics event
-      AnalyticsService.trackEvent('USER_REGISTERED', {
-        userId: user.id,
-      });
-
-      await transaction.commit();
-
-      return {
-        user: {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          role: user.role,
-        },
-        accessToken,
-        refreshToken: refreshTokenStr,
-      };
-    } catch (error) {
-      await transaction.rollback();
-      throw error;
-    }
-  }
-
-  /**
    * Login user
    */
-  async login(data: LoginDTO): Promise<any> {
+  async login(data: LoginDTO): Promise<{
+    user: {
+      id: string;
+      email: string;
+      username: string;
+      role: string;
+    };
+    accessToken: string;
+    refreshToken: string;
+  }> {
     const user = await User.findOne({ where: { email: data.email } });
     if (!user) {
       throw new AppError(401, 'Invalid credentials');
@@ -320,13 +340,16 @@ export class AuthService {
    * Refresh token rotation
    * Validates refresh token, invalidates old one, creates new one
    */
-  async refreshToken(refreshTokenStr: string): Promise<any> {
+  async refreshToken(refreshTokenStr: string): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }> {
     try {
       // Decode and verify token (using JWT library)
-      const decoded = require('jsonwebtoken').verify(
+      const decoded = jwt.verify(
         refreshTokenStr,
         process.env.REFRESH_TOKEN_SECRET || 'refresh-secret'
-      );
+      ) as { id: string };
 
       if (!decoded || !decoded.id) {
         throw new AppError(401, 'Invalid refresh token');
@@ -395,7 +418,7 @@ export class AuthService {
         accessToken: newAccessToken,
         refreshToken: newRefreshTokenStr,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         throw error;
       }
@@ -426,6 +449,21 @@ export class AuthService {
     AnalyticsService.trackEvent('LOGOUT', {
       userId,
     });
+  }
+
+  /**
+   * Get current authenticated user
+   */
+  async getCurrentUser(userId: string): Promise<User> {
+    const user = await User.findByPk(userId, {
+      attributes: ['id', 'email', 'username', 'role', 'isEmailVerified', 'isVerified', 'createdAt'],
+    });
+
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    return user;
   }
 }
 

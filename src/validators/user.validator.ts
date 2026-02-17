@@ -10,6 +10,24 @@ export const createUserSchema = Joi.object({
   }),
 });
 
+export const creatorSignupSchema = Joi.object({
+  body: Joi.object({
+    email: Joi.string().email().required(),
+    username: Joi.string().alphanum().min(3).max(30).required(),
+    password: Joi.string().min(8).required(),
+    slug: Joi.string().alphanum().min(3).max(30).required(),
+    fullName: Joi.string().required(),
+    timezone: Joi.string().optional().default('UTC'),
+    countryCode: Joi.string().optional().length(2),
+  }),
+});
+
+export const refreshTokenSchema = Joi.object({
+  body: Joi.object({
+    refreshToken: Joi.string().required(),
+  }),
+});
+
 export const updateUserSchema = Joi.object({
   body: Joi.object({
     firstName: Joi.string().optional(),

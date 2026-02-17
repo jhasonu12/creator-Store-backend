@@ -15,11 +15,11 @@ const userController = new UserController();
 router.get('/profile', authMiddleware, userController.getProfile);
 
 /**
- * @route PUT /users/profile
+ * @route PATCH /users/profile
  * @desc Update current user profile
  * @access Private
  */
-router.put('/profile', authMiddleware, validateRequest(updateUserSchema), userController.updateProfile);
+router.patch('/profile', authMiddleware, validateRequest(updateUserSchema), userController.updateProfile);
 
 /**
  * @route DELETE /users/profile

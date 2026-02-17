@@ -1,16 +1,17 @@
 import 'express-async-errors';
-import express, { Express, Request, Response, NextFunction } from 'express';
+import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
 import { config } from '@config/environment';
-import { initRedis } from '@config/redis';
+// import { initRedis } from '@config/redis';
 import { requestLogger } from '@common/middleware/logger.middleware';
 import { errorHandler } from '@common/middleware/errorHandler.middleware';
 
 import authRoutes from '@modules/auth/auth.routes';
 import userRoutes from '@modules/users/user.routes';
+import storeSlugRoutes from '@modules/store-slugs/store-slug.routes';
 
 import { logger } from '@common/utils/logger';
 import { sendResponse } from '@common/utils/response';
@@ -47,6 +48,7 @@ export const createApp = (): Express => {
   // API Routes
   app.use(`/api/${config.app.apiVersion}/auth`, authRoutes);
   app.use(`/api/${config.app.apiVersion}/users`, userRoutes);
+  app.use(`/api/${config.app.apiVersion}/store-slugs`, storeSlugRoutes);
 
   // 404 handler
   app.use((req: Request, res: Response) => {
