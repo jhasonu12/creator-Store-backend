@@ -12,6 +12,7 @@ import { errorHandler } from '@common/middleware/errorHandler.middleware';
 import authRoutes from '@modules/auth/auth.routes';
 import userRoutes from '@modules/users/user.routes';
 import storeSlugRoutes from '@modules/store-slugs/store-slug.routes';
+import storeBuilderRoutes from '@modules/store-builder/store-builder.routes';
 
 import { logger } from '@common/utils/logger';
 import { sendResponse } from '@common/utils/response';
@@ -49,6 +50,7 @@ export const createApp = (): Express => {
   app.use(`/api/${config.app.apiVersion}/auth`, authRoutes);
   app.use(`/api/${config.app.apiVersion}/users`, userRoutes);
   app.use(`/api/${config.app.apiVersion}/store-slugs`, storeSlugRoutes);
+  app.use(`/api/${config.app.apiVersion}/stores`, storeBuilderRoutes);
 
   // 404 handler
   app.use((req: Request, res: Response) => {

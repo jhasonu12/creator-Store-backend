@@ -3,6 +3,11 @@ import { initUser } from './User';
 import { initRefreshToken } from './RefreshToken';
 import { initCreatorProfile } from './CreatorProfile';
 import { initStoreSlug } from './StoreSlug';
+import { initStore } from './Store';
+import { initStoreSection } from './StoreSection';
+import { initStorePage } from './StorePage';
+import { initPageBlock } from './PageBlock';
+import { initStoreTheme } from './StoreTheme';
 import { initProduct } from './Product';
 import { initProductFile } from './ProductFile';
 import { initCourse } from './Course';
@@ -20,11 +25,16 @@ import { initAnalyticsEvent } from './AnalyticsEvent';
 import { initMarketplaceProduct } from './MarketplaceProduct';
 
 export const initializeModels = (sequelize: Sequelize) => {
-  // Initialize all 19 models
+  // Initialize all 24 models
   const User = initUser(sequelize);
   const RefreshToken = initRefreshToken(sequelize);
   const CreatorProfile = initCreatorProfile(sequelize);
   const StoreSlug = initStoreSlug(sequelize);
+  const Store = initStore(sequelize);
+  const StoreSection = initStoreSection(sequelize);
+  const StorePage = initStorePage(sequelize);
+  const PageBlock = initPageBlock(sequelize);
+  const StoreTheme = initStoreTheme(sequelize);
   const Product = initProduct(sequelize);
   const ProductFile = initProductFile(sequelize);
   const Course = initCourse(sequelize);
@@ -149,11 +159,41 @@ export const initializeModels = (sequelize: Sequelize) => {
   CreatorProfile.hasMany(AnalyticsEvent, { foreignKey: 'creatorId', onDelete: 'SET NULL' });
   AnalyticsEvent.belongsTo(CreatorProfile, { foreignKey: 'creatorId', as: 'creator' });
 
+  // === Store Builder Associations ===
+  // CreatorProfile -> Store (1:1)
+  CreatorProfile.hasOne(Store, { foreignKey: 'creatorId', onDelete: 'CASCADE' });
+  Store.belongsTo(CreatorProfile, { foreignKey: 'creatorId' });
+
+  // Store -> StoreSection (1:N)
+  Store.hasMany(StoreSection, { foreignKey: 'storeId', onDelete: 'CASCADE' });
+  StoreSection.belongsTo(Store, { foreignKey: 'storeId' });
+
+  // Store -> StorePage (1:N)
+  Store.hasMany(StorePage, { foreignKey: 'storeId', onDelete: 'CASCADE' });
+  StorePage.belongsTo(Store, { foreignKey: 'storeId' });
+
+  // StorePage -> PageBlock (1:N)
+  StorePage.hasMany(PageBlock, { foreignKey: 'pageId', onDelete: 'CASCADE' });
+  PageBlock.belongsTo(StorePage, { foreignKey: 'pageId' });
+
+  // Store -> StoreTheme (1:1)
+  Store.hasOne(StoreTheme, { foreignKey: 'storeId', onDelete: 'CASCADE' });
+  StoreTheme.belongsTo(Store, { foreignKey: 'storeId' });
+
+  // StorePage -> Product (1:N)
+  Product.hasMany(StorePage, { foreignKey: 'productId', onDelete: 'SET NULL' });
+  StorePage.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+
   return {
     User,
     RefreshToken,
     CreatorProfile,
     StoreSlug,
+    Store,
+    StoreSection,
+    StorePage,
+    PageBlock,
+    StoreTheme,
     Product,
     ProductFile,
     Course,
@@ -177,6 +217,11 @@ export { User, UserRole } from './User';
 export * from './RefreshToken';
 export * from './CreatorProfile';
 export { StoreSlug, StoreSlugStatus } from './StoreSlug';
+export { Store, StoreType, StoreStatus } from './Store';
+export { StoreSection, SectionType, SectionStatus } from './StoreSection';
+export { StorePage, PageType, PageStatus } from './StorePage';
+export { PageBlock, BlockType } from './PageBlock';
+export * from './StoreTheme';
 export { Product, ProductType, ProductStatus } from './Product';
 export * from './ProductFile';
 export * from './Course';
