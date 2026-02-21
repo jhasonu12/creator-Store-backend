@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import { CreatorProfile } from '@models/CreatorProfile';
 import { StoreBuilderService } from './store-builder.service';
 import { sendResponse, AppError, asyncHandler } from '@common/utils/response';
 
@@ -14,15 +15,22 @@ export class StoreBuilderController {
 
   getOrCreateStore = asyncHandler(async (req: AuthRequest, res: Response, _next: NextFunction): Promise<void> => {
     try {
-      const creatorId = req.user?.id;
-      if (!creatorId) {
+      const userId = req.user?.id;
+      if (!userId) {
         throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
       }
 
-      const store = await this.storeBuilderService.getOrCreateStore(creatorId);
+      // Get creator profile to access creatorId (which is the profile ID)
+      const creatorProfile = await CreatorProfile.findOne({ where: { userId } });
+      if (!creatorProfile) {
+        throw new AppError(StatusCodes.NOT_FOUND, 'Creator profile not found');
+      }
+
+      const store = await this.storeBuilderService.getOrCreateStore(creatorProfile.id);
 
       sendResponse(res, StatusCodes.OK, 'Store retrieved successfully', store);
     } catch (error) {
+      console.error('Error in getOrCreateStore:', error);
       if (error instanceof AppError) {
         throw error;
       }

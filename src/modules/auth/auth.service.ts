@@ -1,6 +1,7 @@
 import { Sequelize } from 'sequelize';
 import { StatusCodes } from 'http-status-codes';
 import { User, UserRole } from '@models/User';
+import { Store, StoreType, StoreStatus } from '@models/Store';
 import { RefreshToken } from '@models/RefreshToken';
 import { CreatorProfile } from '@models/CreatorProfile';
 import { StoreSlug, StoreSlugStatus } from '@models/StoreSlug';
@@ -196,7 +197,7 @@ export class AuthService {
         { transaction }
       );
 
-      // 5. Create creator profile
+      // 5. Create creator profile (must be before store due to FK constraint)
       const creatorProfile = await CreatorProfile.create(
         {
           userId: user.id,
@@ -204,6 +205,18 @@ export class AuthService {
           timezone: data.timezone || 'UTC',
           countryCode: data.countryCode || null,
           onboardingCompleted: false,
+        },
+        { transaction }
+      );
+
+      // 6. Create store with default data
+      const store = await Store.create(
+        {
+          creatorId: creatorProfile.id,
+          slug: data.slug,
+          name: data.fullName,
+          type: StoreType.LINKSITE,
+          status: StoreStatus.ACTIVE,
         },
         { transaction }
       );

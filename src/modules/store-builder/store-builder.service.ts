@@ -17,15 +17,15 @@ export class StoreBuilderService {
 
   // ========== STORE ==========
 
-  async getOrCreateStore(creatorId: string): Promise<Store> {
-    let store = await Store.findOne({ where: { creatorId } });
+  async getOrCreateStore(creatorProfileId: string): Promise<Store> {
+    let store = await Store.findOne({ where: { creatorId: creatorProfileId } });
 
     if (!store) {
       store = await Store.create({
-        creatorId,
+        creatorId: creatorProfileId,
         type: StoreType.LINKSITE,
         status: StoreStatus.ACTIVE,
-        slug: `store-${creatorId.substring(0, 8)}`,
+        slug: `store-${creatorProfileId.substring(0, 8)}`,
         name: 'My Store',
       });
 
