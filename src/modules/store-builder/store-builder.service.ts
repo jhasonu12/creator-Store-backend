@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize';
+import { StatusCodes } from 'http-status-codes';
 import { Store, StoreType, StoreStatus } from '@models/Store';
 import { StoreSection, SectionStatus, SectionType } from '@models/StoreSection';
 import { StorePage, PageStatus, PageType } from '@models/StorePage';
@@ -48,7 +49,7 @@ export class StoreBuilderService {
   async updateStore(storeId: string, data: { name?: string; description?: string; type?: StoreType }): Promise<Store> {
     const store = await Store.findByPk(storeId);
     if (!store) {
-      throw new AppError(404, 'Store not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Store not found');
     }
 
     if (data.name) store.name = data.name;
@@ -64,7 +65,7 @@ export class StoreBuilderService {
   async createSection(storeId: string, data: { type: string; data: Record<string, unknown>; position?: number }): Promise<StoreSection> {
     const store = await Store.findByPk(storeId);
     if (!store) {
-      throw new AppError(404, 'Store not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Store not found');
     }
 
     // Get max position
@@ -92,7 +93,7 @@ export class StoreBuilderService {
   ): Promise<StoreSection> {
     const section = await StoreSection.findByPk(sectionId);
     if (!section) {
-      throw new AppError(404, 'Section not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Section not found');
     }
 
     if (data.type) section.type = data.type as SectionType;
@@ -105,7 +106,7 @@ export class StoreBuilderService {
   async deleteSection(sectionId: string): Promise<void> {
     const section = await StoreSection.findByPk(sectionId);
     if (!section) {
-      throw new AppError(404, 'Section not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Section not found');
     }
 
     await section.destroy();
@@ -117,7 +118,7 @@ export class StoreBuilderService {
   ): Promise<StoreSection[]> {
     const store = await Store.findByPk(storeId);
     if (!store) {
-      throw new AppError(404, 'Store not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Store not found');
     }
 
     const transaction = await this.sequelize.transaction();
@@ -127,7 +128,7 @@ export class StoreBuilderService {
         sections.map(async (item) => {
           const section = await StoreSection.findByPk(item.id, { transaction });
           if (!section || section.storeId !== storeId) {
-            throw new AppError(404, 'Section not found');
+            throw new AppError(StatusCodes.NOT_FOUND, 'Section not found');
           }
           section.position = item.position;
           await section.save({ transaction });
@@ -158,13 +159,13 @@ export class StoreBuilderService {
   ): Promise<StorePage> {
     const store = await Store.findByPk(storeId);
     if (!store) {
-      throw new AppError(404, 'Store not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Store not found');
     }
 
     // Check slug uniqueness
     const existingPage = await StorePage.findOne({ where: { slug: data.slug } });
     if (existingPage) {
-      throw new AppError(409, 'Slug already exists');
+      throw new AppError(StatusCodes.CONFLICT, 'Slug already exists');
     }
 
     // Get max position
@@ -194,13 +195,13 @@ export class StoreBuilderService {
   ): Promise<StorePage> {
     const page = await StorePage.findByPk(pageId);
     if (!page) {
-      throw new AppError(404, 'Page not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Page not found');
     }
 
     if (data.slug && data.slug !== page.slug) {
       const existingPage = await StorePage.findOne({ where: { slug: data.slug } });
       if (existingPage) {
-        throw new AppError(409, 'Slug already exists');
+        throw new AppError(StatusCodes.CONFLICT, 'Slug already exists');
       }
       page.slug = data.slug;
     }
@@ -216,7 +217,7 @@ export class StoreBuilderService {
   async deletePage(pageId: string): Promise<void> {
     const page = await StorePage.findByPk(pageId);
     if (!page) {
-      throw new AppError(404, 'Page not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Page not found');
     }
 
     await page.destroy();
@@ -225,7 +226,7 @@ export class StoreBuilderService {
   async reorderPages(storeId: string, pages: Array<{ id: string; position: number }>): Promise<StorePage[]> {
     const store = await Store.findByPk(storeId);
     if (!store) {
-      throw new AppError(404, 'Store not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Store not found');
     }
 
     const transaction = await this.sequelize.transaction();
@@ -235,7 +236,7 @@ export class StoreBuilderService {
         pages.map(async (item) => {
           const page = await StorePage.findByPk(item.id, { transaction });
           if (!page || page.storeId !== storeId) {
-            throw new AppError(404, 'Page not found');
+            throw new AppError(StatusCodes.NOT_FOUND, 'Page not found');
           }
           page.position = item.position;
           await page.save({ transaction });
@@ -263,7 +264,7 @@ export class StoreBuilderService {
   async createBlock(pageId: string, data: { type: string; data: Record<string, unknown>; position?: number }): Promise<PageBlock> {
     const page = await StorePage.findByPk(pageId);
     if (!page) {
-      throw new AppError(404, 'Page not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Page not found');
     }
 
     // Get max position
@@ -287,7 +288,7 @@ export class StoreBuilderService {
   async updateBlock(blockId: string, data: { type?: string; data?: Record<string, unknown> }): Promise<PageBlock> {
     const block = await PageBlock.findByPk(blockId);
     if (!block) {
-      throw new AppError(404, 'Block not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Block not found');
     }
 
     if (data.type) block.type = data.type as BlockType;
@@ -300,7 +301,7 @@ export class StoreBuilderService {
   async deleteBlock(blockId: string): Promise<void> {
     const block = await PageBlock.findByPk(blockId);
     if (!block) {
-      throw new AppError(404, 'Block not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Block not found');
     }
 
     await block.destroy();
@@ -309,7 +310,7 @@ export class StoreBuilderService {
   async reorderBlocks(pageId: string, blocks: Array<{ id: string; position: number }>): Promise<PageBlock[]> {
     const page = await StorePage.findByPk(pageId);
     if (!page) {
-      throw new AppError(404, 'Page not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'Page not found');
     }
 
     const transaction = await this.sequelize.transaction();
@@ -319,7 +320,7 @@ export class StoreBuilderService {
         blocks.map(async (item) => {
           const block = await PageBlock.findByPk(item.id, { transaction });
           if (!block || block.pageId !== pageId) {
-            throw new AppError(404, 'Block not found');
+            throw new AppError(StatusCodes.NOT_FOUND, 'Block not found');
           }
           block.position = item.position;
           await block.save({ transaction });

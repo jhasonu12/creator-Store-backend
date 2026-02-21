@@ -1,3 +1,4 @@
+import { StatusCodes } from 'http-status-codes';
 import { User } from '@models/User';
 import { UpdateUserDTO } from '@dto/user.dto';
 import { AppError } from '@common/utils/response';
@@ -14,7 +15,7 @@ export class UserService {
 
     const user = await User.findByPk(id);
     if (!user) {
-      throw new AppError(404, 'User not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
     }
 
     const userDto = {
@@ -38,7 +39,7 @@ export class UserService {
   async updateUser(id: string, data: UpdateUserDTO): Promise<any> {
     const user = await User.findByPk(id);
     if (!user) {
-      throw new AppError(404, 'User not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
     }
 
     const updated = await user.update(data);
@@ -60,7 +61,7 @@ export class UserService {
   async deleteUser(id: string): Promise<void> {
     const user = await User.findByPk(id);
     if (!user) {
-      throw new AppError(404, 'User not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
     }
 
     await user.destroy();

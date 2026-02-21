@@ -1,12 +1,13 @@
 import { Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import { logger } from './logger';
 
 export class AppError extends Error {
   constructor(
-    public statusCode: number,
+    public statusCode: StatusCodes,
     public message: string,
-    public isOperational: boolean = true,
-    public details?: any
+    public details?: Record<string, unknown> | Array<any>,
+    public isOperational: boolean = true
   ) {
     super(message);
     Object.setPrototypeOf(this, new.target.prototype);
@@ -20,7 +21,7 @@ export const asyncHandler = (fn: Function) => {
 
 export const sendResponse = <T>(
   res: Response,
-  statusCode: number,
+  statusCode: StatusCodes,
   message: string,
   data?: T,
   meta?: any
@@ -36,7 +37,7 @@ export const sendResponse = <T>(
 
 export const sendError = (
   res: Response,
-  statusCode: number,
+  statusCode: StatusCodes,
   message: string,
   details?: any
 ): Response => {

@@ -42,10 +42,10 @@ export const initializeDatabase = async (): Promise<void> => {
     logger.info('✓ Database connection established');
 
     // Sync models with database
-    if (config.app.nodeEnv === 'development') {
-      await sequelize.sync();
-      logger.info('✓ Database models synchronized');
-    }
+    // if (config.app.nodeEnv === 'development') {
+    //   await sequelize.sync();
+    //   logger.info('✓ Database models synchronized');
+    // }
   } catch (error) {
     logger.error('✗ Database connection failed:', error);
     throw error;

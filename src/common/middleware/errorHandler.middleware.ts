@@ -1,27 +1,44 @@
 import { Request, Response, NextFunction } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import { logger } from '@common/utils/logger';
+import { AppError } from '@common/utils/response';
 
 export const errorHandler = (
   err: any,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
+  let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
+  let message = 'Internal Server Error';
+  let details = null;
+
+  // Handle AppError instances
+  if (err instanceof AppError) {
+    statusCode = err.statusCode;
+    message = err.message;
+    details = err.details;
+  } else if (err.statusCode) {
+    statusCode = err.statusCode;
+    message = err.message || 'An error occurred';
+    details = err.details;
+  } else {
+    message = err.message || 'Internal Server Error';
+  }
+
   logger.error('Error caught by error handler:', {
-    message: err.message,
-    status: err.statusCode || 500,
+    message,
+    status: statusCode,
     path: req.path,
     method: req.method,
-    stack: err.stack,
+    details,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
   });
-
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
 
   res.status(statusCode).json({
     success: false,
     statusCode,
     message,
-    details: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    details,
   });
 };

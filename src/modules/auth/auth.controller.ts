@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import { AuthService } from './auth.service';
 import { LoginDTO } from '@dto/user.dto';
 import { sendResponse, AppError, asyncHandler } from '@common/utils/response';
@@ -20,12 +21,12 @@ export class AuthController {
         password,
       });
 
-      sendResponse(res, 201, RESPONSE_MESSAGES.SIGNUP_SUCCESS, result);
+      sendResponse(res, StatusCodes.CREATED, RESPONSE_MESSAGES.SIGNUP_SUCCESS, result);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, RESPONSE_MESSAGES.INTERNAL_ERROR);
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.INTERNAL_ERROR);
     }
   });
 
@@ -42,12 +43,13 @@ export class AuthController {
         countryCode,
       });
 
-      sendResponse(res, 201, RESPONSE_MESSAGES.SIGNUP_SUCCESS, result);
+      sendResponse(res, StatusCodes.CREATED, RESPONSE_MESSAGES.SIGNUP_SUCCESS, result);
     } catch (error) {
+      console.error('Error in signupAsCreator:', error);
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, RESPONSE_MESSAGES.INTERNAL_ERROR);
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.INTERNAL_ERROR);
     }
   });
 
@@ -56,12 +58,12 @@ export class AuthController {
       const dto: LoginDTO = req.body;
       const result = await this.authService.login(dto);
 
-      sendResponse(res, 200, RESPONSE_MESSAGES.LOGIN_SUCCESS, result);
+      sendResponse(res, StatusCodes.OK, RESPONSE_MESSAGES.LOGIN_SUCCESS, result);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, RESPONSE_MESSAGES.INTERNAL_ERROR);
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.INTERNAL_ERROR);
     }
   });
 
@@ -69,16 +71,16 @@ export class AuthController {
     try {
       const { refreshToken } = req.body;
       if (!refreshToken) {
-        throw new AppError(400, 'Refresh token is required');
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Refresh token is required');
       }
 
       const result = await this.authService.refreshToken(refreshToken);
-      sendResponse(res, 200, 'Token refreshed successfully', result);
+      sendResponse(res, StatusCodes.OK, 'Token refreshed successfully', result);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, RESPONSE_MESSAGES.INTERNAL_ERROR);
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.INTERNAL_ERROR);
     }
   });
 
@@ -86,17 +88,17 @@ export class AuthController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        throw new AppError(401, 'User not authenticated');
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
       }
 
       await this.authService.logout(userId);
 
-      sendResponse(res, 200, RESPONSE_MESSAGES.LOGOUT_SUCCESS);
+      sendResponse(res, StatusCodes.OK, RESPONSE_MESSAGES.LOGOUT_SUCCESS);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, RESPONSE_MESSAGES.INTERNAL_ERROR);
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.INTERNAL_ERROR);
     }
   });
 
@@ -104,17 +106,17 @@ export class AuthController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        throw new AppError(401, 'User not authenticated');
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
       }
 
       const user = await this.authService.getCurrentUser(userId);
 
-      sendResponse(res, 200, 'User data retrieved successfully', user);
+      sendResponse(res, StatusCodes.OK, 'User data retrieved successfully', user);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, RESPONSE_MESSAGES.INTERNAL_ERROR);
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.INTERNAL_ERROR);
     }
   });
 }

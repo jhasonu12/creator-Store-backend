@@ -3,6 +3,7 @@ import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import { StatusCodes } from 'http-status-codes';
 
 import { config } from '@config/environment';
 // import { initRedis } from '@config/redis';
@@ -38,12 +39,12 @@ export const createApp = (): Express => {
 
   // Health check endpoint
   app.get('/health', (req: Request, res: Response) => {
-    sendResponse(res, 200, 'Service is healthy', { timestamp: new Date() });
+    sendResponse(res, StatusCodes.OK, 'Service is healthy', { timestamp: new Date() });
   });
 
   // API version endpoint
   app.get('/api/version', (req: Request, res: Response) => {
-    sendResponse(res, 200, 'API Version', { version: config.app.apiVersion });
+    sendResponse(res, StatusCodes.OK, 'API Version', { version: config.app.apiVersion });
   });
 
   // API Routes
@@ -54,7 +55,7 @@ export const createApp = (): Express => {
 
   // 404 handler
   app.use((req: Request, res: Response) => {
-    sendResponse(res, 404, `Route not found: ${req.path}`);
+    sendResponse(res, StatusCodes.NOT_FOUND, `Route not found: ${req.path}`);
   });
 
   // Error handling middleware (must be last)

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import { verifyToken } from '@common/utils/helpers';
 import { AppError } from '@common/utils/response';
 
@@ -15,7 +16,7 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new AppError(401, 'Missing or invalid authorization header');
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'Missing or invalid authorization header');
     }
 
     const token = authHeader.substring(7);

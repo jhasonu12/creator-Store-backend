@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import { StoreBuilderService } from './store-builder.service';
 import { sendResponse, AppError, asyncHandler } from '@common/utils/response';
 
@@ -15,17 +16,17 @@ export class StoreBuilderController {
     try {
       const creatorId = req.user?.id;
       if (!creatorId) {
-        throw new AppError(401, 'User not authenticated');
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
       }
 
       const store = await this.storeBuilderService.getOrCreateStore(creatorId);
 
-      sendResponse(res, 200, 'Store retrieved successfully', store);
+      sendResponse(res, StatusCodes.OK, 'Store retrieved successfully', store);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -34,12 +35,12 @@ export class StoreBuilderController {
       const { id } = req.params;
       const store = await this.storeBuilderService.updateStore(id, req.body);
 
-      sendResponse(res, 200, 'Store updated successfully', store);
+      sendResponse(res, StatusCodes.OK, 'Store updated successfully', store);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -50,12 +51,12 @@ export class StoreBuilderController {
       const { storeId } = req.params;
       const section = await this.storeBuilderService.createSection(storeId, req.body);
 
-      sendResponse(res, 201, 'Section created successfully', section);
+      sendResponse(res, StatusCodes.CREATED, 'Section created successfully', section);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -64,12 +65,12 @@ export class StoreBuilderController {
       const { id } = req.params;
       const section = await this.storeBuilderService.updateSection(id, req.body);
 
-      sendResponse(res, 200, 'Section updated successfully', section);
+      sendResponse(res, StatusCodes.OK, 'Section updated successfully', section);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -78,12 +79,12 @@ export class StoreBuilderController {
       const { id } = req.params;
       await this.storeBuilderService.deleteSection(id);
 
-      sendResponse(res, 200, 'Section deleted successfully');
+      sendResponse(res, StatusCodes.OK, 'Section deleted successfully');
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -92,12 +93,12 @@ export class StoreBuilderController {
       const { storeId } = req.params;
       const sections = await this.storeBuilderService.reorderSections(storeId, req.body.sections);
 
-      sendResponse(res, 200, 'Sections reordered successfully', sections);
+      sendResponse(res, StatusCodes.OK, 'Sections reordered successfully', sections);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -106,12 +107,12 @@ export class StoreBuilderController {
       const { storeId } = req.params;
       const sections = await this.storeBuilderService.getSections(storeId);
 
-      sendResponse(res, 200, 'Sections retrieved successfully', sections);
+      sendResponse(res, StatusCodes.OK, 'Sections retrieved successfully', sections);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -122,12 +123,12 @@ export class StoreBuilderController {
       const { storeId } = req.params;
       const page = await this.storeBuilderService.createPage(storeId, req.body);
 
-      sendResponse(res, 201, 'Page created successfully', page);
+      sendResponse(res, StatusCodes.CREATED, 'Page created successfully', page);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -136,12 +137,12 @@ export class StoreBuilderController {
       const { id } = req.params;
       const page = await this.storeBuilderService.updatePage(id, req.body);
 
-      sendResponse(res, 200, 'Page updated successfully', page);
+      sendResponse(res, StatusCodes.OK, 'Page updated successfully', page);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -150,12 +151,12 @@ export class StoreBuilderController {
       const { id } = req.params;
       await this.storeBuilderService.deletePage(id);
 
-      sendResponse(res, 200, 'Page deleted successfully');
+      sendResponse(res, StatusCodes.OK, 'Page deleted successfully');
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -164,12 +165,12 @@ export class StoreBuilderController {
       const { storeId } = req.params;
       const pages = await this.storeBuilderService.reorderPages(storeId, req.body.pages);
 
-      sendResponse(res, 200, 'Pages reordered successfully', pages);
+      sendResponse(res, StatusCodes.OK, 'Pages reordered successfully', pages);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -178,12 +179,12 @@ export class StoreBuilderController {
       const { storeId } = req.params;
       const pages = await this.storeBuilderService.getPages(storeId);
 
-      sendResponse(res, 200, 'Pages retrieved successfully', pages);
+      sendResponse(res, StatusCodes.OK, 'Pages retrieved successfully', pages);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -194,12 +195,12 @@ export class StoreBuilderController {
       const { pageId } = req.params;
       const block = await this.storeBuilderService.createBlock(pageId, req.body);
 
-      sendResponse(res, 201, 'Block created successfully', block);
+      sendResponse(res, StatusCodes.CREATED, 'Block created successfully', block);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -208,12 +209,12 @@ export class StoreBuilderController {
       const { id } = req.params;
       const block = await this.storeBuilderService.updateBlock(id, req.body);
 
-      sendResponse(res, 200, 'Block updated successfully', block);
+      sendResponse(res, StatusCodes.OK, 'Block updated successfully', block);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -222,12 +223,12 @@ export class StoreBuilderController {
       const { id } = req.params;
       await this.storeBuilderService.deleteBlock(id);
 
-      sendResponse(res, 200, 'Block deleted successfully');
+      sendResponse(res, StatusCodes.OK, 'Block deleted successfully');
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -236,12 +237,12 @@ export class StoreBuilderController {
       const { pageId } = req.params;
       const blocks = await this.storeBuilderService.reorderBlocks(pageId, req.body.blocks);
 
-      sendResponse(res, 200, 'Blocks reordered successfully', blocks);
+      sendResponse(res, StatusCodes.OK, 'Blocks reordered successfully', blocks);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -250,12 +251,12 @@ export class StoreBuilderController {
       const { pageId } = req.params;
       const blocks = await this.storeBuilderService.getBlocks(pageId);
 
-      sendResponse(res, 200, 'Blocks retrieved successfully', blocks);
+      sendResponse(res, StatusCodes.OK, 'Blocks retrieved successfully', blocks);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -266,12 +267,12 @@ export class StoreBuilderController {
       const { storeId } = req.params;
       const theme = await this.storeBuilderService.getTheme(storeId);
 
-      sendResponse(res, 200, 'Theme retrieved successfully', theme);
+      sendResponse(res, StatusCodes.OK, 'Theme retrieved successfully', theme);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 
@@ -280,12 +281,12 @@ export class StoreBuilderController {
       const { storeId } = req.params;
       const theme = await this.storeBuilderService.updateTheme(storeId, req.body.config);
 
-      sendResponse(res, 200, 'Theme updated successfully', theme);
+      sendResponse(res, StatusCodes.OK, 'Theme updated successfully', theme);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, 'Internal server error');
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
     }
   });
 }

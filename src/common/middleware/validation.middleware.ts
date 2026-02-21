@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
+import { StatusCodes } from 'http-status-codes';
 import { AppError } from '@common/utils/response';
 
 export const validateRequest = (schema: Joi.ObjectSchema) => {
@@ -19,10 +20,10 @@ export const validateRequest = (schema: Joi.ObjectSchema) => {
     if (error) {
       const details = error.details.map((d) => ({
         field: d.path.join('.'),
-        message: d.message,
+        message: d.message.replace(/"/g, "'"),
       }));
 
-      throw new AppError(400, 'Validation failed', true, details);
+      return next(new AppError(StatusCodes.UNPROCESSABLE_ENTITY, 'Validation failed', details));
     }
 
     req.body = value.body;

@@ -1,3 +1,4 @@
+import { StatusCodes } from 'http-status-codes';
 import { Request, Response, NextFunction } from 'express';
 import { UserService } from './user.service';
 import { UpdateUserDTO } from '@dto/user.dto';
@@ -20,12 +21,12 @@ export class UserController {
       const userId = req.user!.id;
       const user = await this.userService.getUserById(userId);
 
-      sendResponse(res, 200, RESPONSE_MESSAGES.SUCCESS, user);
+      sendResponse(res, StatusCodes.OK, RESPONSE_MESSAGES.SUCCESS, user);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, RESPONSE_MESSAGES.INTERNAL_ERROR);
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.INTERNAL_ERROR);
     }
   });
 
@@ -34,12 +35,12 @@ export class UserController {
       const userId = req.params.id;
       const user = await this.userService.getUserById(userId);
 
-      sendResponse(res, 200, RESPONSE_MESSAGES.SUCCESS, user);
+      sendResponse(res, StatusCodes.OK, RESPONSE_MESSAGES.SUCCESS, user);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, RESPONSE_MESSAGES.INTERNAL_ERROR);
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.INTERNAL_ERROR);
     }
   });
 
@@ -49,12 +50,12 @@ export class UserController {
       const dto: UpdateUserDTO = req.body;
       const updated = await this.userService.updateUser(userId, dto);
 
-      sendResponse(res, 200, RESPONSE_MESSAGES.UPDATED, updated);
+      sendResponse(res, StatusCodes.OK, RESPONSE_MESSAGES.UPDATED, updated);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, RESPONSE_MESSAGES.INTERNAL_ERROR);
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.INTERNAL_ERROR);
     }
   });
 
@@ -63,12 +64,12 @@ export class UserController {
       const userId = req.user!.id;
       await this.userService.deleteUser(userId);
 
-      sendResponse(res, 200, RESPONSE_MESSAGES.DELETED);
+      sendResponse(res, StatusCodes.OK, RESPONSE_MESSAGES.DELETED);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, RESPONSE_MESSAGES.INTERNAL_ERROR);
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.INTERNAL_ERROR);
     }
   });
 
@@ -79,12 +80,12 @@ export class UserController {
 
       const result = await this.userService.getAllUsers(page, limit);
 
-      sendResponse(res, 200, RESPONSE_MESSAGES.SUCCESS, result.users, result.meta);
+      sendResponse(res, StatusCodes.OK, RESPONSE_MESSAGES.SUCCESS, result.users, result.meta);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(500, RESPONSE_MESSAGES.INTERNAL_ERROR);
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.INTERNAL_ERROR);
     }
   });
 }

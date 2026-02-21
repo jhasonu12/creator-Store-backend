@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize';
 import * as jwt from 'jsonwebtoken';
+import { StatusCodes } from 'http-status-codes';
 import { User, UserRole } from '@models/User';
 import { RefreshToken } from '@models/RefreshToken';
 import { CreatorProfile } from '@models/CreatorProfile';
@@ -47,14 +48,14 @@ export class AuthService {
       where: { email: data.email },
     });
     if (existingUser) {
-      throw new AppError(409, 'User with this email already exists');
+      throw new AppError(StatusCodes.CONFLICT, 'User with this email already exists');
     }
 
     const existingUsername = await User.findOne({
       where: { username: data.username },
     });
     if (existingUsername) {
-      throw new AppError(409, 'Username already taken');
+      throw new AppError(StatusCodes.CONFLICT, 'Username already taken');
     }
 
     // Create user with USER role
@@ -148,7 +149,7 @@ export class AuthService {
         transaction,
       });
       if (existingUser) {
-        throw new AppError(409, 'User with this email already exists');
+        throw new AppError(StatusCodes.CONFLICT, 'User with this email already exists');
       }
 
       const existingUsername = await User.findOne({
@@ -156,26 +157,17 @@ export class AuthService {
         transaction,
       });
       if (existingUsername) {
-        throw new AppError(409, 'Username already taken');
+        throw new AppError(StatusCodes.CONFLICT, 'Username already taken');
       }
 
-      // 2. Reserve store slug
+      // 2. Check if store slug is available
       const existingSlug = await StoreSlug.findOne({
         where: { slug: data.slug },
         transaction,
       });
       if (existingSlug) {
-        throw new AppError(409, 'Slug already taken');
+        throw new AppError(StatusCodes.CONFLICT, 'Slug already taken');
       }
-
-      const storeSlug = await StoreSlug.create(
-        {
-          slug: data.slug,
-          status: StoreSlugStatus.RESERVED,
-          reservedAt: new Date(),
-        },
-        { transaction }
-      );
 
       // 3. Create user with CREATOR role
       const hashedPassword = await hashPassword(data.password);
@@ -191,7 +183,19 @@ export class AuthService {
         { transaction }
       );
 
-      // 4. Create creator profile
+      // 4. Create store slug with user as creator
+      const storeSlug = await StoreSlug.create(
+        {
+          slug: data.slug,
+          creatorId: user.id,
+          status: StoreSlugStatus.ACTIVE,
+          reservedAt: new Date(),
+          activatedAt: new Date(),
+        },
+        { transaction }
+      );
+
+      // 5. Create creator profile
       const creatorProfile = await CreatorProfile.create(
         {
           userId: user.id,
@@ -202,12 +206,6 @@ export class AuthService {
         },
         { transaction }
       );
-
-      // 5. Activate store slug
-      storeSlug.creatorId = user.id;
-      storeSlug.status = StoreSlugStatus.ACTIVE;
-      storeSlug.activatedAt = new Date();
-      await storeSlug.save({ transaction });
 
       // 6. Generate tokens
       const accessToken = generateToken({
@@ -285,12 +283,12 @@ export class AuthService {
   }> {
     const user = await User.findOne({ where: { email: data.email } });
     if (!user) {
-      throw new AppError(401, 'Invalid credentials');
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid credentials');
     }
 
     const isPasswordValid = await comparePasswords(data.password, user.password);
     if (!isPasswordValid) {
-      throw new AppError(401, 'Invalid credentials');
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid credentials');
     }
 
     // Generate tokens
@@ -352,7 +350,7 @@ export class AuthService {
       ) as { id: string };
 
       if (!decoded || !decoded.id) {
-        throw new AppError(401, 'Invalid refresh token');
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid refresh token');
       }
 
       // Find the refresh token record
@@ -366,17 +364,17 @@ export class AuthService {
       });
 
       if (!refreshTokenRecord) {
-        throw new AppError(401, 'Refresh token not found or revoked');
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Refresh token not found or revoked');
       }
 
       if (new Date() > refreshTokenRecord.expiresAt) {
-        throw new AppError(401, 'Refresh token expired');
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Refresh token expired');
       }
 
       // Get user
       const user = await User.findByPk(decoded.id);
       if (!user) {
-        throw new AppError(401, 'User not found');
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'User not found');
       }
 
       // Revoke old token
@@ -422,7 +420,7 @@ export class AuthService {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError(401, 'Invalid refresh token');
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid refresh token');
     }
   }
 
@@ -460,7 +458,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new AppError(404, 'User not found');
+      throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
     }
 
     return user;

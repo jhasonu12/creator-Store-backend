@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { StatusCodes } from 'http-status-codes';
 import { AppError } from '@common/utils/response';
 
 export interface RoleRequest extends Request {
@@ -14,11 +15,11 @@ export const roleMiddleware = (allowedRoles: string[]) => {
   return (req: RoleRequest, res: Response, next: NextFunction) => {
     try {
       if (!req.user) {
-        throw new AppError(401, 'User not authenticated');
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
       }
 
       if (!allowedRoles.includes(req.user.role || '')) {
-        throw new AppError(403, 'Insufficient permissions to access this resource');
+        throw new AppError(StatusCodes.FORBIDDEN, 'Insufficient permissions to access this resource');
       }
 
       next();

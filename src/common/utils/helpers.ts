@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { StatusCodes } from 'http-status-codes';
 import { config } from '@config/environment';
 import { AppError } from './response';
 
@@ -53,7 +54,7 @@ export const verifyToken = (token: string): JwtPayload => {
   try {
     return jwt.verify(token, config.jwt.secret) as JwtPayload;
   } catch (error) {
-    throw new AppError(401, 'Invalid or expired token');
+    throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid or expired token');
   }
 };
 
@@ -61,7 +62,7 @@ export const verifyRefreshToken = (token: string): JwtPayload => {
   try {
     return jwt.verify(token, config.jwt.refreshSecret) as JwtPayload;
   } catch (error) {
-    throw new AppError(401, 'Invalid or expired refresh token');
+    throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid or expired refresh token');
   }
 };
 
