@@ -1,5 +1,4 @@
 import { Sequelize } from 'sequelize';
-import * as jwt from 'jsonwebtoken';
 import { StatusCodes } from 'http-status-codes';
 import { User, UserRole } from '@models/User';
 import { RefreshToken } from '@models/RefreshToken';
@@ -12,6 +11,8 @@ import {
   generateToken,
   generateRefreshToken,
   hashToken,
+  verifyRefreshToken,
+  compareTokens,
 } from '@common/utils/helpers';
 import { AppError } from '@common/utils/response';
 import { cacheDel } from '@common/utils/cache';
@@ -343,22 +344,13 @@ export class AuthService {
     refreshToken: string;
   }> {
     try {
-      // Decode and verify token (using JWT library)
-      const decoded = jwt.verify(
-        refreshTokenStr,
-        process.env.REFRESH_TOKEN_SECRET || 'refresh-secret'
-      ) as { id: string };
-
-      if (!decoded || !decoded.id) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid refresh token');
-      }
+      // Verify refresh token using helper
+      const decoded = verifyRefreshToken(refreshTokenStr);
 
       // Find the refresh token record
-      const tokenHash = await hashToken(refreshTokenStr);
       const refreshTokenRecord = await RefreshToken.findOne({
         where: {
           userId: decoded.id,
-          tokenHash,
           revoked: false,
         },
       });
@@ -367,8 +359,10 @@ export class AuthService {
         throw new AppError(StatusCodes.UNAUTHORIZED, 'Refresh token not found or revoked');
       }
 
-      if (new Date() > refreshTokenRecord.expiresAt) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'Refresh token expired');
+      // Verify token matches stored hash
+      const isTokenValid = await compareTokens(refreshTokenStr, refreshTokenRecord.tokenHash);
+      if (!isTokenValid) {
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid refresh token');
       }
 
       // Get user
@@ -378,8 +372,7 @@ export class AuthService {
       }
 
       // Revoke old token
-      refreshTokenRecord.revoked = true;
-      await refreshTokenRecord.save();
+      await refreshTokenRecord.update({ revoked: true });
 
       // Generate new tokens
       const newAccessToken = generateToken({
