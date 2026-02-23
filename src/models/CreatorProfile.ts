@@ -11,6 +11,21 @@ export class CreatorProfile extends Model {
   declare userId: string;
   declare fullName: string;
   declare phoneNumber: string | null;
+  declare profileImage: string | null;
+  declare bio: string | null;
+  declare socials: {
+    applePodcast?: string;
+    facebook?: string;
+    instagram?: string;
+    link?: string;
+    linkedin?: string;
+    mailTo?: string;
+    pinterest?: string;
+    spotify?: string;
+    tiktok?: string;
+    twitter?: string;
+    youtube?: string;
+  } | null;
   declare timezone: string;
   declare countryCode: string;
   declare trialEndsAt: Date | null;
@@ -46,6 +61,19 @@ export const initCreatorProfile = (sequelize: Sequelize) => {
       phoneNumber: {
         type: DataTypes.STRING,
         allowNull: true,
+      },
+      profileImage: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      bio: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      socials: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+        defaultValue: {},
       },
       timezone: {
         type: DataTypes.STRING,

@@ -1,5 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
 import { User } from '@models/User';
+import { CreatorProfile } from '@models/CreatorProfile';
 import { UpdateUserDTO } from '@dto/user.dto';
 import { AppError } from '@common/utils/response';
 import { cacheGet, cacheSet, cacheDel } from '@common/utils/cache';
@@ -13,48 +14,74 @@ export class UserService {
       return cachedUser;
     }
 
-    const user = await User.findByPk(id);
+    const user = await User.findByPk(id, {
+      attributes: ['id', 'email', 'username'],
+      include: [
+        {
+          model: CreatorProfile,
+          attributes: ['fullName', 'profileImage', 'bio', 'socials'],
+          required: false,
+        },
+      ],
+    });
     if (!user) {
       throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
     }
-
-    const userDto = {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      avatar: user.avatar,
-      bio: user.bio,
-      isActive: user.isActive,
-      createdAt: user.createdAt,
-    };
-
     // Cache for 1 hour
-    await cacheSet(`user:${id}`, userDto, 3600);
+    await cacheSet(`user:${id}`, user, 3600);
 
-    return userDto;
+    return user;
   }
 
   async updateUser(id: string, data: UpdateUserDTO): Promise<any> {
-    const user = await User.findByPk(id);
+    // Verify user exists
+    const user = await User.findByPk(id, {
+      attributes: ['id', 'email', 'username'],
+    });
     if (!user) {
       throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
     }
 
-    const updated = await user.update(data);
+    // Work directly with CreatorProfile using userId
+    if (data.creatorProfile) {
+      const creatorProfile = await CreatorProfile.findOne({
+        where: { userId: id },
+      });
+      
+      // Create CreatorProfile if it doesn't exist
+      if (!creatorProfile) {
+        await CreatorProfile.create({
+          userId: id,
+          ...data.creatorProfile,
+        });
+      } else {
+        // Update existing CreatorProfile
+        await creatorProfile.update({
+          ...data.creatorProfile,
+          socials: data.creatorProfile.socials ? {
+            ...creatorProfile.socials,
+            ...data.creatorProfile.socials,
+          } : creatorProfile.socials,
+        });
+      }
+    }
 
     // Invalidate cache
     await cacheDel(`user:${id}`);
 
+    // Fetch updated CreatorProfile
+    const updatedCreatorProfile = await CreatorProfile.findOne({
+      where: { userId: id },
+      attributes: ['fullName', 'profileImage', 'bio', 'socials'],
+    });
+
     return {
-      id: updated.id,
-      email: updated.email,
-      username: updated.username,
-      firstName: updated.firstName,
-      lastName: updated.lastName,
-      avatar: updated.avatar,
-      bio: updated.bio,
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      ...(updatedCreatorProfile && {
+        creatorProfile: updatedCreatorProfile.toJSON(),
+      }),
     };
   }
 
@@ -74,10 +101,18 @@ export class UserService {
       offset: skip,
       limit,
       order: [['createdAt', 'DESC']],
+      attributes: ['email', 'username'],
+      include: [
+        {
+          model: CreatorProfile,
+          attributes: ['fullName', 'profileImage', 'bio', 'socials'],
+          required: false,
+        },
+      ],
     });
 
     return {
-      users,
+      users: users,
       meta: {
         total,
         page,

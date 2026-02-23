@@ -2,16 +2,31 @@ export interface CreateUserDTO {
   email: string;
   username: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
+}
+
+export interface SocialsDTO {
+  applePodcast?: string;
+  facebook?: string;
+  instagram?: string;
+  link?: string;
+  linkedin?: string;
+  mailTo?: string;
+  pinterest?: string;
+  spotify?: string;
+  tiktok?: string;
+  twitter?: string;
+  youtube?: string;
+}
+
+export interface UpdateCreatorProfileDTO {
+  fullName?: string;
+  profileImage?: string;
+  bio?: string;
+  socials?: SocialsDTO;
 }
 
 export interface UpdateUserDTO {
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  bio?: string;
-  avatar?: string;
+  creatorProfile: UpdateCreatorProfileDTO;
 }
 
 export interface LoginDTO {
@@ -23,7 +38,5 @@ export interface UserResponseDTO {
   id: string;
   email: string;
   username: string;
-  firstName?: string | null;
-  lastName?: string | null;
   role: string;
 }

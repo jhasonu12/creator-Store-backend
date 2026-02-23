@@ -27,8 +27,6 @@ export const createUserSchema = Joi.object({
         'string.min': 'Password must be at least 8 characters',
         'any.required': 'Password is required',
       }),
-    firstName: Joi.string().optional(),
-    lastName: Joi.string().optional(),
   }),
 });
 
@@ -99,10 +97,27 @@ export const refreshTokenSchema = Joi.object({
 
 export const updateUserSchema = Joi.object({
   body: Joi.object({
-    firstName: Joi.string().optional(),
-    lastName: Joi.string().optional(),
-    bio: Joi.string().max(500).optional(),
-    avatar: Joi.string().uri().optional(),
+    creatorProfile: Joi.object({
+      fullName: Joi.string().optional(),
+      profileImage: Joi.string().uri().optional(),
+      bio: Joi.string().max(500).optional(),
+      socials: Joi.object({
+        applePodcast: Joi.string().uri().optional(),
+        facebook: Joi.string().uri().optional(),
+        instagram: Joi.string().optional(),
+        link: Joi.string().uri().optional(),
+        linkedin: Joi.string().uri().optional(),
+        mailTo: Joi.string().email().optional(),
+        pinterest: Joi.string().uri().optional(),
+        spotify: Joi.string().uri().optional(),
+        tiktok: Joi.string().optional(),
+        twitter: Joi.string().optional(),
+        youtube: Joi.string().uri().optional(),
+      }).optional(),
+    }).required()
+      .messages({
+        'any.required': 'creatorProfile is required',
+      }),
   }),
 });
 

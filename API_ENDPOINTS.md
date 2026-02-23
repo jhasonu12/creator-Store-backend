@@ -139,7 +139,9 @@ Response (200):
 ```
 
 ### Update Profile
-**PUT** `/users/profile`
+**PATCH** `/users/profile`
+
+**Note:** Username and Email cannot be updated once created. Only creator profile details can be updated.
 
 Headers:
 ```
@@ -150,10 +152,16 @@ Content-Type: application/json
 Request:
 ```json
 {
-  "firstName": "Jane",
-  "lastName": "Smith",
-  "bio": "I am a content creator",
-  "avatar": "https://example.com/avatar.jpg"
+  "creatorProfile": {
+    "fullName": "Jane Smith",
+    "bio": "I am a content creator",
+    "profileImage": "https://example.com/profile.jpg",
+    "socials": {
+      "twitter": "https://twitter.com/janesmith",
+      "instagram": "https://instagram.com/janesmith",
+      "youtube": "https://youtube.com/@janesmith"
+    }
+  }
 }
 ```
 
@@ -167,10 +175,16 @@ Response (200):
     "id": "uuid",
     "email": "user@example.com",
     "username": "johndoe",
-    "firstName": "Jane",
-    "lastName": "Smith",
-    "avatar": "https://example.com/avatar.jpg",
-    "bio": "I am a content creator"
+    "creatorProfile": {
+      "fullName": "Jane Smith",
+      "bio": "I am a content creator",
+      "profileImage": "https://example.com/profile.jpg",
+      "socials": {
+        "twitter": "https://twitter.com/janesmith",
+        "instagram": "https://instagram.com/janesmith",
+        "youtube": "https://youtube.com/@janesmith"
+      }
+    }
   }
 }
 ```

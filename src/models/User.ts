@@ -11,8 +11,6 @@ export class User extends Model {
   declare email: string;
   declare username: string;
   declare password: string;
-  declare firstName: string | null;
-  declare lastName: string | null;
   declare avatar: string | null;
   declare bio: string | null;
   declare role: UserRole;
@@ -55,22 +53,6 @@ export const initUser = (sequelize: Sequelize) => {
       password: {
         type: DataTypes.STRING,
         allowNull: false,
-      },
-      firstName: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      lastName: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      avatar: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      bio: {
-        type: DataTypes.TEXT,
-        allowNull: true,
       },
       role: {
         type: DataTypes.ENUM(...Object.values(UserRole)),

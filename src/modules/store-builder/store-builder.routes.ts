@@ -23,10 +23,10 @@ const storeBuilderController = new StoreBuilderController();
 
 /**
  * @route GET /stores/self
- * @desc Get or create creator's store
+ * @desc Get creator's store (created during signup)
  * @access Private
  */
-router.get('/self', authMiddleware, storeBuilderController.getOrCreateStore);
+router.get('/self', authMiddleware, storeBuilderController.getStore);
 
 /**
  * @route PATCH /stores/:id

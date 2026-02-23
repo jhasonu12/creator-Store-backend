@@ -113,6 +113,7 @@ export class AuthController {
 
       sendResponse(res, StatusCodes.OK, 'User data retrieved successfully', user);
     } catch (error) {
+      console.error('Error in getMe:', error);
       if (error instanceof AppError) {
         throw error;
       }

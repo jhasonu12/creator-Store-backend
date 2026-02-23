@@ -461,6 +461,13 @@ export class AuthService {
   async getCurrentUser(userId: string): Promise<User> {
     const user = await User.findByPk(userId, {
       attributes: ['id', 'email', 'username', 'role', 'isEmailVerified', 'isVerified', 'createdAt'],
+      include: [
+        {
+          model: CreatorProfile,
+          attributes: ['fullName', 'profileImage', 'bio', 'socials', 'timezone', 'countryCode'],
+          required: false,
+        },
+      ],
     });
 
     if (!user) {

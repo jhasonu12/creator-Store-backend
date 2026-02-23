@@ -313,8 +313,7 @@ curl -X GET http://localhost:3001/api/v1/users/profile \
     "id": "550e8400-e29b-41d4-a716-446655440001",
     "email": "user@example.com",
     "username": "johndoe",
-    "firstName": "John",
-    "lastName": "Doe",
+    "fullName": "John Doe",
     "avatar": "https://example.com/avatars/johndoe.jpg",
     "bio": "Digital creator and entrepreneur",
     "role": "USER",
@@ -327,9 +326,11 @@ curl -X GET http://localhost:3001/api/v1/users/profile \
 ---
 
 ### 2. Update User Profile
-**Scenario:** Update user's profile information (name, bio, avatar). Use when user edits their account settings.
+**Scenario:** Update creator profile information including profile image, bio, full name, and social media links. Username and email cannot be updated once created. Use when a user/creator edits their profile settings.
 
 **Endpoint:** `PATCH /users/profile`
+
+**Note:** Only creator profile fields can be updated. Username and email are immutable after account creation.
 
 **Request:**
 ```bash
@@ -337,10 +338,24 @@ curl -X PATCH http://localhost:3001/api/v1/users/profile \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -d '{
-    "firstName": "John",
-    "lastName": "Smith",
-    "bio": "Digital creator, educator, and entrepreneur",
-    "avatar": "https://example.com/avatars/johnsmith.jpg"
+    "creatorProfile": {
+      "fullName": "Jane Doe",
+      "profileImage": "https://example.com/profile.jpg",
+      "bio": "Digital creator and entrepreneur",
+      "socials": {
+        "applePodcast": "https://podcasts.apple.com/janedoe",
+        "facebook": "https://facebook.com/janedoe",
+        "instagram": "jane_doe",
+        "link": "https://janedoe.com",
+        "linkedin": "https://linkedin.com/in/janedoe",
+        "mailTo": "jane@example.com",
+        "pinterest": "https://pinterest.com/janedoe",
+        "spotify": "https://open.spotify.com/artist/janedoe",
+        "tiktok": "janedoe",
+        "twitter": "https://twitter.com/janedoe",
+        "youtube": "https://youtube.com/@janedoe"
+      }
+    }
   }'
 ```
 
@@ -349,16 +364,29 @@ curl -X PATCH http://localhost:3001/api/v1/users/profile \
 {
   "success": true,
   "statusCode": 200,
-  "message": "Profile updated successfully",
+  "message": "Resource updated successfully",
   "data": {
     "id": "550e8400-e29b-41d4-a716-446655440001",
     "email": "user@example.com",
     "username": "johndoe",
-    "firstName": "John",
-    "lastName": "Smith",
-    "avatar": "https://example.com/avatars/johnsmith.jpg",
-    "bio": "Digital creator, educator, and entrepreneur",
-    "role": "USER"
+    "creatorProfile": {
+      "fullName": "Jane Doe",
+      "profileImage": "https://example.com/profile.jpg",
+      "bio": "Digital creator and entrepreneur",
+      "socials": {
+        "applePodcast": "https://podcasts.apple.com/janedoe",
+        "facebook": "https://facebook.com/janedoe",
+        "instagram": "jane_doe",
+        "link": "https://janedoe.com",
+        "linkedin": "https://linkedin.com/in/janedoe",
+        "mailTo": "jane@example.com",
+        "pinterest": "https://pinterest.com/janedoe",
+        "spotify": "https://open.spotify.com/artist/janedoe",
+        "tiktok": "janedoe",
+        "twitter": "https://twitter.com/janedoe",
+        "youtube": "https://youtube.com/@janedoe"
+      }
+    }
   }
 }
 ```
@@ -421,8 +449,6 @@ curl -X GET "http://localhost:3001/api/v1/users?page=1&limit=20"
         "id": "550e8400-e29b-41d4-a716-446655440001",
         "email": "user1@example.com",
         "username": "johndoe",
-        "firstName": "John",
-        "lastName": "Doe",
         "role": "USER",
         "createdAt": "2026-02-15T10:30:00Z"
       },
@@ -430,8 +456,6 @@ curl -X GET "http://localhost:3001/api/v1/users?page=1&limit=20"
         "id": "550e8400-e29b-41d4-a716-446655440002",
         "email": "user2@example.com",
         "username": "janedoe",
-        "firstName": "Jane",
-        "lastName": "Doe",
         "role": "CREATOR",
         "createdAt": "2026-02-16T15:45:00Z"
       }
@@ -463,8 +487,6 @@ curl -X GET http://localhost:3001/api/v1/users/550e8400-e29b-41d4-a716-446655440
     "id": "550e8400-e29b-41d4-a716-446655440001",
     "email": "user@example.com",
     "username": "johndoe",
-    "firstName": "John",
-    "lastName": "Doe",
     "avatar": "https://example.com/avatars/johndoe.jpg",
     "bio": "Digital creator and entrepreneur",
     "role": "USER",
@@ -490,7 +512,7 @@ The store builder consists of 3 main components: **Stores** (container), **Secti
 
 ### STORE MANAGEMENT
 
-#### Get or Create Creator Store
+#### Get Creator Store
 **Scenario:** Fetch creator's store or automatically create one on first access. Use during onboarding or when accessing the store dashboard.
 
 **Endpoint:** `GET /stores/self`

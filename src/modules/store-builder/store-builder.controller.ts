@@ -13,7 +13,7 @@ export class StoreBuilderController {
 
   // ========== STORE ENDPOINTS ==========
 
-  getOrCreateStore = asyncHandler(async (req: AuthRequest, res: Response, _next: NextFunction): Promise<void> => {
+  getStore = asyncHandler(async (req: AuthRequest, res: Response, _next: NextFunction): Promise<void> => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -23,14 +23,14 @@ export class StoreBuilderController {
       // Get creator profile to access creatorId (which is the profile ID)
       const creatorProfile = await CreatorProfile.findOne({ where: { userId } });
       if (!creatorProfile) {
-        throw new AppError(StatusCodes.NOT_FOUND, 'Creator profile not found');
+        throw new AppError(StatusCodes.NOT_FOUND, 'Creator profile not found. Please sign up as a creator.');
       }
 
-      const store = await this.storeBuilderService.getOrCreateStore(creatorProfile.id);
+      const store = await this.storeBuilderService.getStore(creatorProfile.id);
 
       sendResponse(res, StatusCodes.OK, 'Store retrieved successfully', store);
     } catch (error) {
-      console.error('Error in getOrCreateStore:', error);
+      console.error('Error in getStore:', error);
       if (error instanceof AppError) {
         throw error;
       }

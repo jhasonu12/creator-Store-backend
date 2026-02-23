@@ -17,30 +17,11 @@ export class StoreBuilderService {
 
   // ========== STORE ==========
 
-  async getOrCreateStore(creatorProfileId: string): Promise<Store> {
-    let store = await Store.findOne({ where: { creatorId: creatorProfileId } });
+  async getStore(creatorProfileId: string): Promise<Store> {
+    const store = await Store.findOne({ where: { creatorId: creatorProfileId } });
 
     if (!store) {
-      store = await Store.create({
-        creatorId: creatorProfileId,
-        type: StoreType.LINKSITE,
-        status: StoreStatus.ACTIVE,
-        slug: `store-${creatorProfileId.substring(0, 8)}`,
-        name: 'My Store',
-      });
-
-      // Create default store theme
-      await StoreTheme.create({
-        storeId: store.id,
-        config: {
-          primaryColor: '#000000',
-          secondaryColor: '#FFFFFF',
-          fontFamily: 'Inter',
-          fontSize: '16px',
-          borderRadius: '8px',
-          buttonStyle: 'rounded',
-        },
-      });
+      throw new AppError(StatusCodes.NOT_FOUND, 'Store not found. Store is created during creator signup.');
     }
 
     return store;

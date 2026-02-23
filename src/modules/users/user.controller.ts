@@ -1,5 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { UserService } from './user.service';
 import { UpdateUserDTO } from '@dto/user.dto';
 import { sendResponse, AppError, asyncHandler } from '@common/utils/response';
@@ -16,7 +16,7 @@ interface UserRequest extends Request {
 export class UserController {
   private userService = new UserService();
 
-  getProfile = asyncHandler(async (req: UserRequest, res: Response, next: NextFunction): Promise<void> => {
+  getProfile = asyncHandler(async (req: UserRequest, res: Response): Promise<void> => {
     try {
       const userId = req.user!.id;
       const user = await this.userService.getUserById(userId);
@@ -26,11 +26,12 @@ export class UserController {
       if (error instanceof AppError) {
         throw error;
       }
+      console.error('Error in getProfile:', error);
       throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, RESPONSE_MESSAGES.INTERNAL_ERROR);
     }
   });
 
-  getUser = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.params.id;
       const user = await this.userService.getUserById(userId);
@@ -44,7 +45,7 @@ export class UserController {
     }
   });
 
-  updateProfile = asyncHandler(async (req: UserRequest, res: Response, next: NextFunction): Promise<void> => {
+  updateProfile = asyncHandler(async (req: UserRequest, res: Response): Promise<void> => {
     try {
       const userId = req.user!.id;
       const dto: UpdateUserDTO = req.body;
@@ -52,6 +53,7 @@ export class UserController {
 
       sendResponse(res, StatusCodes.OK, RESPONSE_MESSAGES.UPDATED, updated);
     } catch (error) {
+      console.error('Error in updateProfile:', error);
       if (error instanceof AppError) {
         throw error;
       }
@@ -59,7 +61,7 @@ export class UserController {
     }
   });
 
-  deleteProfile = asyncHandler(async (req: UserRequest, res: Response, next: NextFunction): Promise<void> => {
+  deleteProfile = asyncHandler(async (req: UserRequest, res: Response): Promise<void> => {
     try {
       const userId = req.user!.id;
       await this.userService.deleteUser(userId);
@@ -73,7 +75,7 @@ export class UserController {
     }
   });
 
-  getAllUsers = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getAllUsers = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
