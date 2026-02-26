@@ -14,6 +14,7 @@ import authRoutes from '@modules/auth/auth.routes';
 import userRoutes from '@modules/users/user.routes';
 import storeSlugRoutes from '@modules/store-slugs/store-slug.routes';
 import storeBuilderRoutes from '@modules/store-builder/store-builder.routes';
+import productRoutes from '@modules/products/product.routes';
 
 import { logger } from '@common/utils/logger';
 import { sendResponse } from '@common/utils/response';
@@ -52,6 +53,7 @@ export const createApp = (): Express => {
   app.use(`/api/${config.app.apiVersion}/users`, userRoutes);
   app.use(`/api/${config.app.apiVersion}/store-slugs`, storeSlugRoutes);
   app.use(`/api/${config.app.apiVersion}/stores`, storeBuilderRoutes);
+  app.use(`/api/${config.app.apiVersion}/products`, productRoutes);
 
   // 404 handler
   app.use((req: Request, res: Response) => {

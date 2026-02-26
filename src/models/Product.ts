@@ -22,6 +22,7 @@ export class Product extends Model {
   declare currency: string;
   declare thumbnailUrl: string | null;
   declare status: ProductStatus;
+  declare position: number;
   declare createdAt: Date;
   declare updatedAt: Date;
 
@@ -73,6 +74,11 @@ export const initProduct = (sequelize: Sequelize) => {
       status: {
         type: DataTypes.ENUM(...Object.values(ProductStatus)),
         defaultValue: ProductStatus.DRAFT,
+      },
+      position: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
       },
       createdAt: {
         type: DataTypes.DATE,

@@ -5,6 +5,7 @@ import { Store, StoreType, StoreStatus } from '@models/Store';
 import { RefreshToken } from '@models/RefreshToken';
 import { CreatorProfile } from '@models/CreatorProfile';
 import { StoreSlug, StoreSlugStatus } from '@models/StoreSlug';
+import { StoreTheme } from '@models/StoreTheme';
 import { LoginDTO } from '@dto/user.dto';
 import {
   hashPassword,
@@ -221,7 +222,23 @@ export class AuthService {
         { transaction }
       );
 
-      // 6. Generate tokens
+      // 7. Create default store theme
+      await StoreTheme.create(
+        {
+          storeId: store.id,
+          config: {
+            primaryColor: '#000000',
+            secondaryColor: '#FFFFFF',
+            fontFamily: 'Inter',
+            fontSize: '16px',
+            borderRadius: '8px',
+            buttonStyle: 'rounded',
+          },
+        },
+        { transaction }
+      );
+
+      // 8. Generate tokens
       const accessToken = generateToken({
         id: user.id,
         email: user.email,
@@ -236,7 +253,7 @@ export class AuthService {
         role: user.role,
       });
 
-      // 7. Create refresh token record
+      // 9. Create refresh token record
       const tokenHash = await hashToken(refreshTokenStr);
       await RefreshToken.create(
         {
@@ -248,7 +265,7 @@ export class AuthService {
         { transaction }
       );
 
-      // 8. Log analytics event
+      // 10. Log analytics event
       AnalyticsService.trackEvent('CREATOR_REGISTERED', {
         userId: user.id,
         creatorId: user.id,

@@ -66,10 +66,6 @@ export const initializeModels = (sequelize: Sequelize) => {
   User.hasOne(StoreSlug, { foreignKey: 'creatorId', onDelete: 'CASCADE' });
   StoreSlug.belongsTo(User, { foreignKey: 'creatorId', as: 'creator' });
 
-  // User -> Product (1:N) - products created by user
-  User.hasMany(Product, { foreignKey: 'creatorId', onDelete: 'CASCADE' });
-  Product.belongsTo(User, { foreignKey: 'creatorId', as: 'creator' });
-
   // User -> Order (1:N) - buyer orders
   User.hasMany(Order, { foreignKey: 'buyerId', onDelete: 'SET NULL' });
   Order.belongsTo(User, { foreignKey: 'buyerId', as: 'buyer' });
@@ -145,6 +141,10 @@ export const initializeModels = (sequelize: Sequelize) => {
   CreatorProfile.hasMany(OrderItem, { foreignKey: 'creatorId', onDelete: 'SET NULL' });
   OrderItem.belongsTo(CreatorProfile, { foreignKey: 'creatorId', as: 'creator' });
 
+  // CreatorProfile -> Product (1:N) - products created by creator
+  CreatorProfile.hasMany(Product, { foreignKey: 'creatorId', onDelete: 'CASCADE' });
+  Product.belongsTo(CreatorProfile, { foreignKey: 'creatorId', as: 'creator' });
+
   // === Marketplace/Ads Associations ===
   // CreatorProfile -> SponsoredProduct (1:N)
   CreatorProfile.hasMany(SponsoredProduct, { foreignKey: 'creatorId', onDelete: 'CASCADE' });
@@ -163,6 +163,9 @@ export const initializeModels = (sequelize: Sequelize) => {
   // CreatorProfile -> Store (1:1)
   CreatorProfile.hasOne(Store, { foreignKey: 'creatorId', onDelete: 'CASCADE' });
   Store.belongsTo(CreatorProfile, { foreignKey: 'creatorId', as: 'creatorProfile' });
+
+  // Store -> Product (1:N) - products created by same creator
+  Store.hasMany(Product, { foreignKey: 'creatorId', sourceKey: 'creatorId', as: 'products' });
 
   // Store -> StoreSection (1:N)
   Store.hasMany(StoreSection, { foreignKey: 'storeId', onDelete: 'CASCADE', as: 'sections' });

@@ -6,6 +6,7 @@ import { StoreSection } from '@models/StoreSection';
 import { StorePage } from '@models/StorePage';
 import { PageBlock } from '@models/PageBlock';
 import { StoreTheme } from '@models/StoreTheme';
+import { Product } from '@models/Product';
 import { StoreBuilderService } from './store-builder.service';
 import { sendResponse, AppError, asyncHandler } from '@common/utils/response';
 
@@ -41,6 +42,12 @@ export class StoreBuilderController {
             attributes: ['id', 'fullName', 'profileImage', 'bio', 'socials'],
           },
           {
+            model: Product,
+            as: 'products',
+            attributes: ['id', 'type', 'title', 'description', 'price', 'currency', 'thumbnailUrl', 'status', 'position', 'createdAt', 'updatedAt'],
+            order: [['position', 'ASC']],
+          },
+          {
             model: StoreSection,
             as: 'sections',
             attributes: ['id', 'type', 'position', 'status', 'data', 'createdAt', 'updatedAt'],
@@ -72,7 +79,7 @@ export class StoreBuilderController {
         throw new AppError(StatusCodes.NOT_FOUND, 'Store not found. Store is created during creator signup.');
       }
 
-      // Return store data with nested creator profile
+      // Return store data with nested creator profile and products
       sendResponse(res, StatusCodes.OK, 'Store data retrieved successfully', store.toJSON());
     } catch (error) {
       console.error('Error in getStore:', error);
@@ -179,6 +186,7 @@ export class StoreBuilderController {
 
       sendResponse(res, StatusCodes.CREATED, 'Page created successfully', page);
     } catch (error) {
+      console.error('Error in createPage:', error);
       if (error instanceof AppError) {
         throw error;
       }
@@ -323,6 +331,7 @@ export class StoreBuilderController {
 
       sendResponse(res, StatusCodes.OK, 'Theme retrieved successfully', theme);
     } catch (error) {
+      console.error('Error in getTheme:', error);
       if (error instanceof AppError) {
         throw error;
       }

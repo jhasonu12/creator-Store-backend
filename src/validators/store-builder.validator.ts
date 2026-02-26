@@ -11,6 +11,9 @@ export const createStoreSchema = Joi.object({
 });
 
 export const updateStoreSchema = Joi.object({
+  params: Joi.object({
+    id: Joi.string().uuid().required(),
+  }),
   body: Joi.object({
     name: Joi.string().min(1).max(100).optional(),
     description: Joi.string().max(500).optional(),
@@ -21,6 +24,9 @@ export const updateStoreSchema = Joi.object({
 // ========== SECTIONS (Link-in-bio) ==========
 
 export const createSectionSchema = Joi.object({
+  params: Joi.object({
+    storeId: Joi.string().uuid().required(),
+  }),
   body: Joi.object({
     type: Joi.string()
       .valid(
@@ -40,6 +46,9 @@ export const createSectionSchema = Joi.object({
 });
 
 export const updateSectionSchema = Joi.object({
+  params: Joi.object({
+    id: Joi.string().uuid().required(),
+  }),
   body: Joi.object({
     type: Joi.string()
       .valid(
@@ -58,6 +67,9 @@ export const updateSectionSchema = Joi.object({
 });
 
 export const reorderSectionsSchema = Joi.object({
+  params: Joi.object({
+    storeId: Joi.string().uuid().required(),
+  }),
   body: Joi.object({
     sections: Joi.array()
       .items(
@@ -73,6 +85,9 @@ export const reorderSectionsSchema = Joi.object({
 // ========== PAGES (Product Landing Pages) ==========
 
 export const createPageSchema = Joi.object({
+  params: Joi.object({
+    storeId: Joi.string().uuid().required(),
+  }),
   body: Joi.object({
     slug: Joi.string().min(1).max(100).required(),
     type: Joi.string()
@@ -85,6 +100,9 @@ export const createPageSchema = Joi.object({
 });
 
 export const updatePageSchema = Joi.object({
+  params: Joi.object({
+    id: Joi.string().uuid().required(),
+  }),
   body: Joi.object({
     slug: Joi.string().min(1).max(100).optional(),
     type: Joi.string()
@@ -96,6 +114,9 @@ export const updatePageSchema = Joi.object({
 });
 
 export const reorderPagesSchema = Joi.object({
+  params: Joi.object({
+    storeId: Joi.string().uuid().required(),
+  }),
   body: Joi.object({
     pages: Joi.array()
       .items(
@@ -111,6 +132,9 @@ export const reorderPagesSchema = Joi.object({
 // ========== PAGE BLOCKS (Sales Builder) ==========
 
 export const createBlockSchema = Joi.object({
+  params: Joi.object({
+    pageId: Joi.string().uuid().required(),
+  }),
   body: Joi.object({
     type: Joi.string()
       .valid(
@@ -133,6 +157,9 @@ export const createBlockSchema = Joi.object({
 });
 
 export const updateBlockSchema = Joi.object({
+  params: Joi.object({
+    id: Joi.string().uuid().required(),
+  }),
   body: Joi.object({
     type: Joi.string()
       .valid(
@@ -154,6 +181,9 @@ export const updateBlockSchema = Joi.object({
 });
 
 export const reorderBlocksSchema = Joi.object({
+  params: Joi.object({
+    pageId: Joi.string().uuid().required(),
+  }),
   body: Joi.object({
     blocks: Joi.array()
       .items(
@@ -169,6 +199,9 @@ export const reorderBlocksSchema = Joi.object({
 // ========== THEME ==========
 
 export const updateThemeSchema = Joi.object({
+  params: Joi.object({
+    storeId: Joi.string().uuid().required(),
+  }),
   body: Joi.object({
     config: Joi.object({
       primaryColor: Joi.string().optional(),

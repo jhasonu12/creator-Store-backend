@@ -327,20 +327,10 @@ export class StoreBuilderService {
   // ========== THEME ==========
 
   async getTheme(storeId: string): Promise<StoreTheme> {
-    let theme = await StoreTheme.findOne({ where: { storeId } });
+    const theme = await StoreTheme.findOne({ where: { storeId } });
 
     if (!theme) {
-      theme = await StoreTheme.create({
-        storeId,
-        config: {
-          primaryColor: '#000000',
-          secondaryColor: '#FFFFFF',
-          fontFamily: 'Inter',
-          fontSize: '16px',
-          borderRadius: '8px',
-          buttonStyle: 'rounded',
-        },
-      });
+      throw new AppError(StatusCodes.NOT_FOUND, 'Theme not found for this store');
     }
 
     return theme;
