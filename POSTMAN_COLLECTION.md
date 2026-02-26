@@ -513,7 +513,7 @@ The store builder consists of 3 main components: **Stores** (container), **Secti
 ### STORE MANAGEMENT
 
 #### Get Creator Store
-**Scenario:** Fetch creator's store or automatically create one on first access. Use during onboarding or when accessing the store dashboard.
+**Scenario:** Fetch creator's complete dashboard data including store details, creator profile, sections, pages with blocks, and theme settings. Use when accessing the store dashboard or during onboarding to load all necessary data for the page builder.
 
 **Endpoint:** `GET /stores/self`
 
@@ -529,17 +529,110 @@ curl -X GET http://localhost:3001/api/v1/stores/self \
 {
   "success": true,
   "statusCode": 200,
-  "message": "Store retrieved successfully",
+  "message": "Store data retrieved successfully",
   "data": {
-    "id": "660e8400-e29b-41d4-a716-446655440001",
-    "creatorId": "550e8400-e29b-41d4-a716-446655440002",
+    "id": "770e8400-e29b-41d4-a716-446655440001",
+    "creatorId": "660e8400-e29b-41d4-a716-446655440001",
     "type": "linksite",
     "status": 1,
     "slug": "my-awesome-store",
     "name": "My Awesome Store",
     "description": "Welcome to my store!",
     "createdAt": "2026-02-18T10:30:00Z",
-    "updatedAt": "2026-02-18T10:30:00Z"
+    "updatedAt": "2026-02-18T10:30:00Z",
+    "creatorProfile": {
+      "id": "660e8400-e29b-41d4-a716-446655440001",
+      "fullName": "Jane Doe",
+      "profileImage": "https://example.com/profile.jpg",
+      "bio": "Digital creator and entrepreneur",
+      "socials": {
+        "twitter": "https://twitter.com/janedoe",
+        "instagram": "jane_doe",
+        "youtube": "https://youtube.com/@janedoe"
+      }
+    },
+    "sections": [
+      {
+        "id": "880e8400-e29b-41d4-a716-446655440001",
+        "type": "title",
+        "position": 0,
+        "status": 1,
+        "data": {
+          "text": "Welcome to My Store",
+          "fontSize": "32px",
+          "color": "#000000"
+        },
+        "createdAt": "2026-02-18T10:30:00Z",
+        "updatedAt": "2026-02-18T10:30:00Z"
+      },
+      {
+        "id": "880e8400-e29b-41d4-a716-446655440002",
+        "type": "product_link",
+        "position": 1,
+        "status": 1,
+        "data": {
+          "productId": "990e8400-e29b-41d4-a716-446655440001",
+          "title": "My Digital Course",
+          "description": "Learn web development"
+        },
+        "createdAt": "2026-02-18T10:30:00Z",
+        "updatedAt": "2026-02-18T10:30:00Z"
+      }
+    ],
+    "pages": [
+      {
+        "id": "aa0e8400-e29b-41d4-a716-446655440001",
+        "slug": "course-landing",
+        "type": "checkout",
+        "position": 0,
+        "status": 1,
+        "data": {
+          "title": "Complete Web Development Course"
+        },
+        "createdAt": "2026-02-18T10:30:00Z",
+        "updatedAt": "2026-02-18T10:30:00Z",
+        "blocks": [
+          {
+            "id": "bb0e8400-e29b-41d4-a716-446655440001",
+            "type": "hero",
+            "position": 0,
+            "data": {
+              "headline": "Learn Web Development",
+              "subheadline": "Master modern technologies",
+              "cta_text": "Enroll Now",
+              "background_image": "https://..."
+            },
+            "createdAt": "2026-02-18T10:30:00Z",
+            "updatedAt": "2026-02-18T10:30:00Z"
+          },
+          {
+            "id": "bb0e8400-e29b-41d4-a716-446655440002",
+            "type": "testimonial",
+            "position": 1,
+            "data": {
+              "author": "John Developer",
+              "role": "Software Engineer",
+              "text": "This course transformed my career!",
+              "image": "https://..."
+            },
+            "createdAt": "2026-02-18T10:30:00Z",
+            "updatedAt": "2026-02-18T10:30:00Z"
+          }
+        ]
+      }
+    ],
+    "theme": {
+      "id": "cc0e8400-e29b-41d4-a716-446655440001",
+      "config": {
+        "primaryColor": "#FF6B35",
+        "secondaryColor": "#F7F7F7",
+        "fontFamily": "Poppins",
+        "fontSize": "16px",
+        "borderRadius": "12px",
+        "buttonStyle": "rounded"
+      },
+      "updatedAt": "2026-02-18T10:30:00Z"
+    }
   }
 }
 ```
@@ -1089,7 +1182,7 @@ curl -X PATCH http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-446655
 ---
 
 ## Date Last Updated
-February 17, 2026
+February 26, 2026
 
 ---
 

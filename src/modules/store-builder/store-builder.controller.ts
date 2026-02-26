@@ -1,6 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { CreatorProfile } from '@models/CreatorProfile';
+import { Store } from '@models/Store';
+import { StoreSection } from '@models/StoreSection';
+import { StorePage } from '@models/StorePage';
+import { PageBlock } from '@models/PageBlock';
+import { StoreTheme } from '@models/StoreTheme';
 import { StoreBuilderService } from './store-builder.service';
 import { sendResponse, AppError, asyncHandler } from '@common/utils/response';
 
@@ -20,15 +25,55 @@ export class StoreBuilderController {
         throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
       }
 
-      // Get creator profile to access creatorId (which is the profile ID)
+      // Get creator profile to access creatorId
       const creatorProfile = await CreatorProfile.findOne({ where: { userId } });
       if (!creatorProfile) {
         throw new AppError(StatusCodes.NOT_FOUND, 'Creator profile not found. Please sign up as a creator.');
       }
 
-      const store = await this.storeBuilderService.getStore(creatorProfile.id);
+      // Get store with all related data including creator profile
+      const store = await Store.findOne({
+        where: { creatorId: creatorProfile.id },
+        include: [
+          {
+            model: CreatorProfile,
+            as: 'creatorProfile',
+            attributes: ['id', 'fullName', 'profileImage', 'bio', 'socials'],
+          },
+          {
+            model: StoreSection,
+            as: 'sections',
+            attributes: ['id', 'type', 'position', 'status', 'data', 'createdAt', 'updatedAt'],
+            order: [['position', 'ASC']],
+          },
+          {
+            model: StorePage,
+            as: 'pages',
+            attributes: ['id', 'slug', 'type', 'position', 'status', 'data', 'createdAt', 'updatedAt'],
+            order: [['position', 'ASC']],
+            include: [
+              {
+                model: PageBlock,
+                as: 'blocks',
+                attributes: ['id', 'type', 'position', 'data', 'createdAt', 'updatedAt'],
+                order: [['position', 'ASC']],
+              },
+            ],
+          },
+          {
+            model: StoreTheme,
+            as: 'theme',
+            attributes: ['id', 'config', 'updatedAt'],
+          },
+        ],
+      });
 
-      sendResponse(res, StatusCodes.OK, 'Store retrieved successfully', store);
+      if (!store) {
+        throw new AppError(StatusCodes.NOT_FOUND, 'Store not found. Store is created during creator signup.');
+      }
+
+      // Return store data with nested creator profile
+      sendResponse(res, StatusCodes.OK, 'Store data retrieved successfully', store.toJSON());
     } catch (error) {
       console.error('Error in getStore:', error);
       if (error instanceof AppError) {
@@ -61,6 +106,7 @@ export class StoreBuilderController {
 
       sendResponse(res, StatusCodes.CREATED, 'Section created successfully', section);
     } catch (error) {
+      console.error('Error in createSection:', error);
       if (error instanceof AppError) {
         throw error;
       }

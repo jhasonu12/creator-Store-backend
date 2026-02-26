@@ -162,22 +162,22 @@ export const initializeModels = (sequelize: Sequelize) => {
   // === Store Builder Associations ===
   // CreatorProfile -> Store (1:1)
   CreatorProfile.hasOne(Store, { foreignKey: 'creatorId', onDelete: 'CASCADE' });
-  Store.belongsTo(CreatorProfile, { foreignKey: 'creatorId' });
+  Store.belongsTo(CreatorProfile, { foreignKey: 'creatorId', as: 'creatorProfile' });
 
   // Store -> StoreSection (1:N)
-  Store.hasMany(StoreSection, { foreignKey: 'storeId', onDelete: 'CASCADE' });
+  Store.hasMany(StoreSection, { foreignKey: 'storeId', onDelete: 'CASCADE', as: 'sections' });
   StoreSection.belongsTo(Store, { foreignKey: 'storeId' });
 
   // Store -> StorePage (1:N)
-  Store.hasMany(StorePage, { foreignKey: 'storeId', onDelete: 'CASCADE' });
+  Store.hasMany(StorePage, { foreignKey: 'storeId', onDelete: 'CASCADE', as: 'pages' });
   StorePage.belongsTo(Store, { foreignKey: 'storeId' });
 
   // StorePage -> PageBlock (1:N)
-  StorePage.hasMany(PageBlock, { foreignKey: 'pageId', onDelete: 'CASCADE' });
+  StorePage.hasMany(PageBlock, { foreignKey: 'pageId', onDelete: 'CASCADE', as: 'blocks' });
   PageBlock.belongsTo(StorePage, { foreignKey: 'pageId' });
 
   // Store -> StoreTheme (1:1)
-  Store.hasOne(StoreTheme, { foreignKey: 'storeId', onDelete: 'CASCADE' });
+  Store.hasOne(StoreTheme, { foreignKey: 'storeId', onDelete: 'CASCADE', as: 'theme' });
   StoreTheme.belongsTo(Store, { foreignKey: 'storeId' });
 
   // StorePage -> Product (1:N)

@@ -214,7 +214,7 @@ export class AuthService {
         {
           creatorId: creatorProfile.id,
           slug: data.slug,
-          name: data.fullName,
+          name: data.username,
           type: StoreType.LINKSITE,
           status: StoreStatus.ACTIVE,
         },
