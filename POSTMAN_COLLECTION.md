@@ -702,9 +702,14 @@ curl -X PATCH http://localhost:3001/api/v1/products/992e8400-e29b-41d4-a716-4466
 **Request Body:**
 ```json
 {
-  "status": "DRAFT | PUBLISHED | ARCHIVED"
+  "status": 0 | 1 | 2
 }
 ```
+
+**Status Values:**
+- `0` = DRAFT
+- `1` = PUBLISHED
+- `2` = ARCHIVED
 
 #### Example 1: Publish a Product
 **Request:**
@@ -713,7 +718,7 @@ curl -X PATCH http://localhost:3001/api/v1/products/992e8400-e29b-41d4-a716-4466
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -d '{
-    "status": "PUBLISHED"
+    "status": 1
   }'
 ```
 
@@ -722,7 +727,7 @@ curl -X PATCH http://localhost:3001/api/v1/products/992e8400-e29b-41d4-a716-4466
 {
   "success": true,
   "statusCode": 200,
-  "message": "Product status updated to PUBLISHED",
+  "message": "Product status updated successfully",
   "data": {
     "id": "992e8400-e29b-41d4-a716-446655440003",
     "creatorId": "550e8400-e29b-41d4-a716-446655440002",
@@ -732,7 +737,7 @@ curl -X PATCH http://localhost:3001/api/v1/products/992e8400-e29b-41d4-a716-4466
     "price": 129.99,
     "currency": "USD",
     "thumbnailUrl": "https://example.com/js-course-updated.jpg",
-    "status": "PUBLISHED",
+    "status": 1,
     "position": 0,
     "createdAt": "2026-02-22T09:45:00Z",
     "updatedAt": "2026-02-22T11:25:00Z"
@@ -747,7 +752,7 @@ curl -X PATCH http://localhost:3001/api/v1/products/992e8400-e29b-41d4-a716-4466
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -d '{
-    "status": "ARCHIVED"
+    "status": 2
   }'
 ```
 
@@ -756,7 +761,7 @@ curl -X PATCH http://localhost:3001/api/v1/products/992e8400-e29b-41d4-a716-4466
 {
   "success": true,
   "statusCode": 200,
-  "message": "Product status updated to ARCHIVED",
+  "message": "Product status updated successfully",
   "data": {
     "id": "992e8400-e29b-41d4-a716-446655440003",
     "creatorId": "550e8400-e29b-41d4-a716-446655440002",
@@ -766,7 +771,7 @@ curl -X PATCH http://localhost:3001/api/v1/products/992e8400-e29b-41d4-a716-4466
     "price": 129.99,
     "currency": "USD",
     "thumbnailUrl": "https://example.com/js-course-updated.jpg",
-    "status": "ARCHIVED",
+    "status": 2,
     "position": 0,
     "createdAt": "2026-02-22T09:45:00Z",
     "updatedAt": "2026-02-22T11:30:00Z"
@@ -781,7 +786,7 @@ curl -X PATCH http://localhost:3001/api/v1/products/992e8400-e29b-41d4-a716-4466
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -d '{
-    "status": "DRAFT"
+    "status": 0
   }'
 ```
 
@@ -790,7 +795,7 @@ curl -X PATCH http://localhost:3001/api/v1/products/992e8400-e29b-41d4-a716-4466
 {
   "success": true,
   "statusCode": 200,
-  "message": "Product status updated to DRAFT",
+  "message": "Product status updated successfully",
   "data": {
     "id": "992e8400-e29b-41d4-a716-446655440003",
     "creatorId": "550e8400-e29b-41d4-a716-446655440002",
@@ -800,7 +805,7 @@ curl -X PATCH http://localhost:3001/api/v1/products/992e8400-e29b-41d4-a716-4466
     "price": 129.99,
     "currency": "USD",
     "thumbnailUrl": "https://example.com/js-course-updated.jpg",
-    "status": "DRAFT",
+    "status": 0,
     "position": 0,
     "createdAt": "2026-02-22T09:45:00Z",
     "updatedAt": "2026-02-22T11:35:00Z"
@@ -818,7 +823,7 @@ curl -X PATCH http://localhost:3001/api/v1/products/992e8400-e29b-41d4-a716-4466
 {
   "success": false,
   "statusCode": 400,
-  "message": "Invalid status. Allowed values: DRAFT, PUBLISHED, ARCHIVED"
+  "message": "Invalid status. Allowed values: 0 (DRAFT), 1 (PUBLISHED), 2 (ARCHIVED)"
 }
 ```
 
@@ -1616,6 +1621,154 @@ curl -X PATCH http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-446655
 
 ---
 
+## Public Store Endpoints
+
+> **Note:** These endpoints do not require authentication and are used for public storefront access.
+
+### 1. Get Store by Slug (Public Storefront)
+**Scenario:** Retrieve a public store's full data including products, sections, pages, and theme configuration. Use this for displaying the public storefront/landing page.
+
+**Endpoint:** `GET /public/store/:slug`
+
+**Parameters:**
+- `slug` (string, required) - The store slug identifier (e.g., "mystore", "johndoe-creations")
+
+**Request:**
+```bash
+curl -X GET http://localhost:3001/public/store/mystore \
+  -H "Content-Type: application/json"
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Store data retrieved successfully",
+  "data": {
+    "id": "660e8400-e29b-41d4-a716-446655440001",
+    "creatorId": "550e8400-e29b-41d4-a716-446655440001",
+    "slug": "mystore",
+    "name": "My Store",
+    "description": "Welcome to my creative store",
+    "type": "linksite",
+    "status": 1,
+    "createdAt": "2026-02-18T10:00:00Z",
+    "updatedAt": "2026-02-28T12:30:00Z",
+    "creatorProfile": {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "fullName": "John Doe",
+      "profileImage": "https://example.com/profiles/john.jpg",
+      "bio": "Creative entrepreneur and digital artist",
+      "socials": {
+        "twitter": "https://twitter.com/johndoe",
+        "instagram": "https://instagram.com/johndoe"
+      }
+    },
+    "products": [
+      {
+        "id": "770e8400-e29b-41d4-a716-446655440001",
+        "type": "digital",
+        "title": "E-book: Digital Marketing Guide",
+        "description": "Comprehensive guide to modern digital marketing strategies",
+        "price": "29.99",
+        "currency": "USD",
+        "thumbnailUrl": "https://example.com/products/ebook-thumbnail.jpg",
+        "status": "PUBLISHED",
+        "position": 0,
+        "createdAt": "2026-02-18T10:00:00Z",
+        "updatedAt": "2026-02-28T11:00:00Z"
+      },
+      {
+        "id": "880e8400-e29b-41d4-a716-446655440001",
+        "type": "service",
+        "title": "Coaching Session",
+        "description": "1-on-1 coaching session for aspiring entrepreneurs",
+        "price": "99.99",
+        "currency": "USD",
+        "thumbnailUrl": "https://example.com/products/coaching.jpg",
+        "status": "PUBLISHED",
+        "position": 1,
+        "createdAt": "2026-02-18T10:30:00Z",
+        "updatedAt": "2026-02-28T11:00:00Z"
+      }
+    ],
+    "sections": [
+      {
+        "id": "990e8400-e29b-41d4-a716-446655440001",
+        "type": "hero",
+        "position": 0,
+        "status": "PUBLISHED",
+        "data": {
+          "title": "Welcome to My Creative Store",
+          "description": "Discover premium content and services",
+          "backgroundColor": "#FFFFFF",
+          "ctaText": "Shop Now"
+        },
+        "createdAt": "2026-02-18T10:00:00Z",
+        "updatedAt": "2026-02-28T11:00:00Z"
+      }
+    ],
+    "pages": [
+      {
+        "id": "aa0e8400-e29b-41d4-a716-446655440001",
+        "slug": "about",
+        "type": "custom",
+        "position": 0,
+        "status": "PUBLISHED",
+        "data": {
+          "title": "About Me",
+          "content": "Learn more about my journey..."
+        },
+        "createdAt": "2026-02-18T10:00:00Z",
+        "updatedAt": "2026-02-28T11:00:00Z",
+        "blocks": [
+          {
+            "id": "bb0e8400-e29b-41d4-a716-446655440001",
+            "type": "text",
+            "position": 0,
+            "data": {
+              "content": "I started this journey..."
+            },
+            "createdAt": "2026-02-18T10:00:00Z",
+            "updatedAt": "2026-02-28T11:00:00Z"
+          }
+        ]
+      }
+    ],
+    "theme": {
+      "id": "cc0e8400-e29b-41d4-a716-446655440001",
+      "config": {
+        "primaryColor": "#2563EB",
+        "secondaryColor": "#FFFFFF",
+        "fontFamily": "Inter",
+        "fontSize": "16px",
+        "borderRadius": "8px",
+        "buttonStyle": "rounded"
+      },
+      "updatedAt": "2026-02-28T12:30:00Z"
+    }
+  }
+}
+```
+
+**Error Response (404 Not Found):**
+```bash
+curl -X GET http://localhost:3001/public/store/nonexistent \
+  -H "Content-Type: application/json"
+```
+
+```json
+{
+  "success": false,
+  "statusCode": 404,
+  "message": "Store not found or is not active",
+  "data": null
+}
+```
+
+---
+
 ## Common Status Codes
 
 | Code | Meaning | Example Use |
@@ -1642,7 +1795,7 @@ curl -X PATCH http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-446655
 ---
 
 ## Date Last Updated
-February 26, 2026
+February 28, 2026
 
 ---
 

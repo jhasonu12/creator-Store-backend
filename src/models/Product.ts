@@ -7,9 +7,9 @@ export enum ProductType {
 }
 
 export enum ProductStatus {
-  DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
-  ARCHIVED = 'ARCHIVED',
+  DRAFT = 0,
+  PUBLISHED = 1,
+  ARCHIVED = 2,
 }
 
 export class Product extends Model {
@@ -72,7 +72,7 @@ export const initProduct = (sequelize: Sequelize) => {
         allowNull: true,
       },
       status: {
-        type: DataTypes.ENUM(...Object.values(ProductStatus)),
+        type: DataTypes.SMALLINT,
         defaultValue: ProductStatus.DRAFT,
       },
       position: {

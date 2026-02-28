@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { ProductType, ProductStatus } from '@models/Product';
 
 // ========== PRODUCTS ==========
 
@@ -21,15 +22,15 @@ export const updateProductSchema = Joi.object({
   }),
   body: Joi.object({
     type: Joi.string()
-      .valid('DIGITAL', 'COURSE', 'SUBSCRIPTION')
+      .valid(...Object.values(ProductType))
       .optional(),
     title: Joi.string().min(3).max(200).optional(),
     description: Joi.string().min(10).max(2000).optional(),
     price: Joi.number().min(0).optional(),
     currency: Joi.string().length(3).optional(),
     thumbnailUrl: Joi.string().uri().optional(),
-    status: Joi.string()
-      .valid('DRAFT', 'PUBLISHED', 'ARCHIVED')
+    status: Joi.number()
+      .valid(...Object.values(ProductStatus))
       .optional(),
   }).required(),
 });
@@ -51,8 +52,8 @@ export const updateStatusSchema = Joi.object({
     id: Joi.string().uuid().required(),
   }),
   body: Joi.object({
-    status: Joi.string()
-      .valid('DRAFT', 'PUBLISHED', 'ARCHIVED')
+    status: Joi.number()
+      .valid(...Object.values(ProductStatus))
       .required(),
   }).required(),
 });
