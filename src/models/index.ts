@@ -184,7 +184,7 @@ export const initializeModels = (sequelize: Sequelize) => {
   StoreTheme.belongsTo(Store, { foreignKey: 'storeId' });
 
   // StorePage -> Product (1:N)
-  Product.hasMany(StorePage, { foreignKey: 'productId', onDelete: 'SET NULL' });
+  Product.hasMany(StorePage, { foreignKey: 'productId', onDelete: 'SET NULL', as: 'pages' });
   StorePage.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 
   return {

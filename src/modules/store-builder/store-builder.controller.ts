@@ -44,28 +44,30 @@ export class StoreBuilderController {
           {
             model: Product,
             as: 'products',
-            attributes: ['id', 'type', 'title', 'description', 'price', 'currency', 'thumbnailUrl', 'status', 'position', 'createdAt', 'updatedAt'],
+            attributes: ['id', 'type', 'title', 'thumbnailUrl', 'displayStyle', 'ctaButtonText', 'status', 'position', 'createdAt', 'updatedAt'],
             order: [['position', 'ASC']],
+            include: [
+              {
+                model: StorePage,
+                as: 'pages',
+                attributes: ['id', 'type', 'status', 'data', 'createdAt', 'updatedAt'],
+                order: [['createdAt', 'DESC']],
+                include: [
+                  {
+                    model: PageBlock,
+                    as: 'blocks',
+                    attributes: ['id', 'type', 'position', 'data', 'createdAt', 'updatedAt'],
+                    order: [['position', 'ASC']],
+                  },
+                ],
+              },
+            ],
           },
           {
             model: StoreSection,
             as: 'sections',
             attributes: ['id', 'type', 'position', 'status', 'data', 'createdAt', 'updatedAt'],
             order: [['position', 'ASC']],
-          },
-          {
-            model: StorePage,
-            as: 'pages',
-            attributes: ['id', 'slug', 'type', 'position', 'status', 'data', 'createdAt', 'updatedAt'],
-            order: [['position', 'ASC']],
-            include: [
-              {
-                model: PageBlock,
-                as: 'blocks',
-                attributes: ['id', 'type', 'position', 'data', 'createdAt', 'updatedAt'],
-                order: [['position', 'ASC']],
-              },
-            ],
           },
           {
             model: StoreTheme,
@@ -214,20 +216,6 @@ export class StoreBuilderController {
       await this.storeBuilderService.deletePage(id);
 
       sendResponse(res, StatusCodes.OK, 'Page deleted successfully');
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
-    }
-  });
-
-  reorderPages = asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const { storeId } = req.params;
-      const pages = await this.storeBuilderService.reorderPages(storeId, req.body.pages);
-
-      sendResponse(res, StatusCodes.OK, 'Pages reordered successfully', pages);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;

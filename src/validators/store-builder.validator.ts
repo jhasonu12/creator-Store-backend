@@ -1,5 +1,24 @@
 import Joi from 'joi';
 
+// ========== PAGE DATA SCHEMA ==========
+/**
+ * Validation schema for StorePage.data JSON field
+ * Ensures consistent structure for page-specific configuration and pricing
+ */
+const pageDataSchema = Joi.object({
+  // Page metadata (required)
+  title: Joi.string().min(1).max(200).required(),
+  productId: Joi.string().uuid().required(),
+  
+  // Pricing information
+  price: Joi.number().min(0).precision(2).optional(),
+  currency: Joi.string().length(3).optional(), // ISO 4217 currency code (e.g., 'USD')
+  discountPrice: Joi.number().min(0).precision(2).allow(null).optional(),
+  isDiscountPriceAvailable: Joi.boolean().optional(),
+  
+  // Allow additional fields for flexibility
+}).unknown(true);
+
 // ========== STORE ==========
 
 export const createStoreSchema = Joi.object({
@@ -89,13 +108,11 @@ export const createPageSchema = Joi.object({
     storeId: Joi.string().uuid().required(),
   }),
   body: Joi.object({
-    slug: Joi.string().min(1).max(100).required(),
     type: Joi.string()
       .valid('digital-download', 'course', 'subscription', 'checkout', 'upsell', 'thank-you')
       .required(),
-    productId: Joi.string().uuid().optional(),
-    data: Joi.object().optional(),
-    position: Joi.number().integer().min(0).optional(),
+    productId: Joi.string().uuid().required(),
+    data: pageDataSchema.required(),
   }),
 });
 
@@ -104,30 +121,15 @@ export const updatePageSchema = Joi.object({
     id: Joi.string().uuid().required(),
   }),
   body: Joi.object({
-    slug: Joi.string().min(1).max(100).optional(),
     type: Joi.string()
       .valid('digital-download', 'course', 'subscription', 'checkout', 'upsell', 'thank-you')
       .optional(),
     productId: Joi.string().uuid().optional(),
-    data: Joi.object().optional(),
+    data: pageDataSchema.optional(),
   }),
 });
 
-export const reorderPagesSchema = Joi.object({
-  params: Joi.object({
-    storeId: Joi.string().uuid().required(),
-  }),
-  body: Joi.object({
-    pages: Joi.array()
-      .items(
-        Joi.object({
-          id: Joi.string().uuid().required(),
-          position: Joi.number().integer().min(0).required(),
-        })
-      )
-      .required(),
-  }),
-});
+
 
 // ========== PAGE BLOCKS (Sales Builder) ==========
 

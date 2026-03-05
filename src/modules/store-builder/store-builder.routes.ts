@@ -9,7 +9,6 @@ import {
   reorderSectionsSchema,
   createPageSchema,
   updatePageSchema,
-  reorderPagesSchema,
   createBlockSchema,
   updateBlockSchema,
   reorderBlocksSchema,
@@ -101,13 +100,6 @@ router.patch('/pages/:id', authMiddleware, validateRequest(updatePageSchema), st
  * @access Private
  */
 router.delete('/pages/:id', authMiddleware, storeBuilderController.deletePage);
-
-/**
- * @route PATCH /stores/:storeId/pages/order
- * @desc Reorder pages (atomic operation)
- * @access Private
- */
-router.patch('/:storeId/pages/order', authMiddleware, validateRequest(reorderPagesSchema), storeBuilderController.reorderPages);
 
 // ========== BLOCK ROUTES (Sales Page Blocks) ==========
 

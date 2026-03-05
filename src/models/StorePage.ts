@@ -15,15 +15,32 @@ export enum PageStatus {
   ARCHIVED = 2,
 }
 
+/**
+ * Data schema for StorePage JSON field
+ * Contains page-specific configuration and pricing information
+ */
+export interface PageDataSchema {
+  // Page metadata
+  title: string;
+  productId: string;
+  
+  // Pricing information (for checkout pages)
+  price?: number;
+  currency?: string;
+  discountPrice?: number | null;
+  isDiscountPriceAvailable?: boolean;
+  
+  // Page-specific content (flexible for different page types)
+  [key: string]: unknown;
+}
+
 export class StorePage extends Model {
   declare id: string;
   declare storeId: string;
-  declare productId: string | null;
-  declare slug: string;
+  declare productId: string;
   declare type: PageType;
   declare status: PageStatus;
-  declare position: number;
-  declare data: Record<string, unknown>;
+  declare data: PageDataSchema;
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -42,12 +59,7 @@ export const initStorePage = (sequelize: Sequelize): typeof StorePage => {
       },
       productId: {
         type: DataTypes.UUID,
-        allowNull: true,
-      },
-      slug: {
-        type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
       },
       type: {
         type: DataTypes.ENUM(...Object.values(PageType)),
@@ -56,10 +68,6 @@ export const initStorePage = (sequelize: Sequelize): typeof StorePage => {
       status: {
         type: DataTypes.SMALLINT,
         defaultValue: PageStatus.DRAFT,
-      },
-      position: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
       },
       data: {
         type: DataTypes.JSON,
@@ -81,8 +89,7 @@ export const initStorePage = (sequelize: Sequelize): typeof StorePage => {
       timestamps: true,
       indexes: [
         { fields: ['storeId'] },
-        { fields: ['slug'] },
-        { fields: ['storeId', 'position'], unique: true },
+        { fields: ['productId'] },
       ],
     }
   );

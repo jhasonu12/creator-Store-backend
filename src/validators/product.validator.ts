@@ -1,18 +1,20 @@
 import Joi from 'joi';
-import { ProductType, ProductStatus } from '@models/Product';
+import { ProductType, ProductStatus, StyleType } from '@models/Product';
 
 // ========== PRODUCTS ==========
 
 export const createProductSchema = Joi.object({
   body: Joi.object({
     type: Joi.string()
-      .valid('DIGITAL', 'COURSE', 'SUBSCRIPTION')
+      .valid(...Object.values(ProductType))
       .required(),
     title: Joi.string().min(3).max(200).required(),
-    description: Joi.string().min(10).max(2000).required(),
-    price: Joi.number().min(0).required(),
-    currency: Joi.string().length(3).optional().default('USD'),
-    thumbnailUrl: Joi.string().uri().optional(),
+    thumbnailUrl: Joi.string().uri().optional().allow(null),
+    displayStyle: Joi.string()
+      .valid(...Object.values(StyleType))
+      .optional()
+      .default(StyleType.BUTTON),
+    ctaButtonText: Joi.string().min(1).max(100).optional().default('Get Access'),
   }).required(),
 });
 
@@ -25,10 +27,11 @@ export const updateProductSchema = Joi.object({
       .valid(...Object.values(ProductType))
       .optional(),
     title: Joi.string().min(3).max(200).optional(),
-    description: Joi.string().min(10).max(2000).optional(),
-    price: Joi.number().min(0).optional(),
-    currency: Joi.string().length(3).optional(),
-    thumbnailUrl: Joi.string().uri().optional(),
+    thumbnailUrl: Joi.string().uri().optional().allow(null),
+    displayStyle: Joi.string()
+      .valid(...Object.values(StyleType))
+      .optional(),
+    ctaButtonText: Joi.string().min(1).max(100).optional(),
     status: Joi.number()
       .valid(...Object.values(ProductStatus))
       .optional(),

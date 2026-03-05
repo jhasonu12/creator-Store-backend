@@ -24,7 +24,8 @@ const migrateProductStatus = async () => {
     await sequelize.authenticate();
     console.log('✓ Database connected\n');
 
-    const migrationPath = path.join(__dirname, 'src/migrations/20260228000001-fix-product-status-type.js');
+    // Load the comprehensive migration file
+    const migrationPath = path.join(__dirname, 'src/migrations/20260304000001-make-productid-required.js');
     const migration = require(migrationPath);
 
     console.log('Running product status type migration...\n');

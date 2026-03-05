@@ -22,10 +22,26 @@ export class PublicService {
         {
           model: Product,
           as: 'products',
-          attributes: ['id', 'type', 'title', 'description', 'price', 'currency', 'thumbnailUrl', 'status', 'position', 'createdAt', 'updatedAt'],
+          attributes: ['id', 'type', 'title', 'thumbnailUrl', 'displayStyle', 'ctaButtonText', 'status', 'position', 'createdAt', 'updatedAt'],
           order: [['position', 'ASC']],
           where: { status: ProductStatus.PUBLISHED },
           required: false,
+          include: [
+            {
+              model: StorePage,
+              as: 'pages',
+              attributes: ['id', 'type', 'status', 'data', 'createdAt', 'updatedAt'],
+              order: [['createdAt', 'DESC']],
+              include: [
+                {
+                  model: PageBlock,
+                  as: 'blocks',
+                  attributes: ['id', 'type', 'position', 'data', 'createdAt', 'updatedAt'],
+                  order: [['position', 'ASC']],
+                },
+              ],
+            },
+          ],
         },
         {
           model: StoreSection,
@@ -34,22 +50,6 @@ export class PublicService {
           order: [['position', 'ASC']],
           where: { status: SectionStatus.PUBLISHED },
           required: false,
-        },
-        {
-          model: StorePage,
-          as: 'pages',
-          attributes: ['id', 'slug', 'type', 'position', 'status', 'data', 'createdAt', 'updatedAt'],
-          order: [['position', 'ASC']],
-          where: { status: PageStatus.PUBLISHED },
-          required: false,
-          include: [
-            {
-              model: PageBlock,
-              as: 'blocks',
-              attributes: ['id', 'type', 'position', 'data', 'createdAt', 'updatedAt'],
-              order: [['position', 'ASC']],
-            },
-          ],
         },
         {
           model: StoreTheme,

@@ -508,6 +508,14 @@ curl -X GET http://localhost:3001/api/v1/users/550e8400-e29b-41d4-a716-446655440
 
 ## Product Management Endpoints
 
+**Product & Page Architecture:**
+- **Products:** Contain catalog information only (title, type, thumbnail, styling, CTA)
+- **Pages:** Are sales/checkout pages that reference products via `productId` foreign key
+- Products do NOT include pages in their response - pages are accessed separately via store endpoints
+- When a product is created, a default checkout page is automatically created with `price: 0`
+- Pricing and page-level configuration are stored in the page's `data` JSON schema
+- Multiple pages can reference the same product (e.g., different pricing variants for upsells)
+
 ### 1. Get All Products
 **Scenario:** Fetch all products created by the authenticated creator. Use in product listing/dashboard to show inventory.
 
@@ -532,28 +540,75 @@ curl -X GET http://localhost:3001/api/v1/products \
       "creatorId": "550e8400-e29b-41d4-a716-446655440002",
       "type": "DIGITAL",
       "title": "Complete Web Development Course",
-      "description": "Learn HTML, CSS, JavaScript, React, Node.js, and MongoDB from scratch",
-      "price": 99.99,
-      "currency": "USD",
       "thumbnailUrl": "https://example.com/course-thumbnail.jpg",
-      "status": "PUBLISHED",
+      "displayStyle": "Callout",
+      "ctaButtonText": "Enroll Now",
+      "status": 0,
       "position": 0,
       "createdAt": "2026-02-20T10:30:00Z",
-      "updatedAt": "2026-02-20T10:30:00Z"
+      "updatedAt": "2026-02-20T10:30:00Z",
+      "pages": [
+        {
+          "id": "aa0e8400-e29b-41d4-a716-446655440001",
+          "type": "checkout",
+          "status": 1,
+          "data": {
+            "title": "Complete Web Development Course",
+            "productId": "990e8400-e29b-41d4-a716-446655440001",
+            "price": 99.99,
+            "currency": "USD",
+            "discountPrice": 79.99,
+            "isDiscountPriceAvailable": true
+          },
+          "createdAt": "2026-02-20T10:30:00Z",
+          "updatedAt": "2026-02-20T10:30:00Z",
+          "blocks": [
+            {
+              "id": "bb0e8400-e29b-41d4-a716-446655440001",
+              "type": "hero",
+              "position": 0,
+              "data": {
+                "headline": "Learn Web Development",
+                "subheadline": "Master modern technologies",
+                "cta_text": "Enroll Now"
+              },
+              "createdAt": "2026-02-20T10:30:00Z",
+              "updatedAt": "2026-02-20T10:30:00Z"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "991e8400-e29b-41d4-a716-446655440002",
       "creatorId": "550e8400-e29b-41d4-a716-446655440002",
       "type": "COURSE",
       "title": "Advanced React Patterns",
-      "description": "Master advanced React concepts, hooks, state management, and performance optimization",
-      "price": 79.99,
-      "currency": "USD",
       "thumbnailUrl": "https://example.com/react-course.jpg",
-      "status": "DRAFT",
+      "displayStyle": "Preview",
+      "ctaButtonText": "Enroll Now",
+      "status": 0,
       "position": 1,
       "createdAt": "2026-02-21T14:15:00Z",
-      "updatedAt": "2026-02-21T14:15:00Z"
+      "updatedAt": "2026-02-21T14:15:00Z",
+      "pages": [
+        {
+          "id": "aa0e8400-e29b-41d4-a716-446655440002",
+          "type": "checkout",
+          "status": 0,
+          "data": {
+            "title": "Advanced React Patterns - Checkout",
+            "productId": "991e8400-e29b-41d4-a716-446655440002",
+            "price": 0,
+            "currency": "USD",
+            "discountPrice": null,
+            "isDiscountPriceAvailable": false
+          },
+          "createdAt": "2026-02-21T14:15:00Z",
+          "updatedAt": "2026-02-21T14:15:00Z",
+          "blocks": []
+        }
+      ]
     }
   ]
 }
@@ -583,14 +638,44 @@ curl -X GET http://localhost:3001/api/v1/products/990e8400-e29b-41d4-a716-446655
     "creatorId": "550e8400-e29b-41d4-a716-446655440002",
     "type": "DIGITAL",
     "title": "Complete Web Development Course",
-    "description": "Learn HTML, CSS, JavaScript, React, Node.js, and MongoDB from scratch",
-    "price": 99.99,
-    "currency": "USD",
     "thumbnailUrl": "https://example.com/course-thumbnail.jpg",
-    "status": "PUBLISHED",
+    "displayStyle": "Callout",
+    "ctaButtonText": "Enroll Now",
+    "status": 0,
     "position": 0,
     "createdAt": "2026-02-20T10:30:00Z",
-    "updatedAt": "2026-02-20T10:30:00Z"
+    "updatedAt": "2026-02-20T10:30:00Z",
+    "pages": [
+      {
+        "id": "aa0e8400-e29b-41d4-a716-446655440001",
+        "type": "checkout",
+        "status": 1,
+        "data": {
+          "title": "Complete Web Development Course",
+          "productId": "990e8400-e29b-41d4-a716-446655440001",
+          "price": 99.99,
+          "currency": "USD",
+          "discountPrice": 79.99,
+          "isDiscountPriceAvailable": true
+        },
+        "createdAt": "2026-02-20T10:30:00Z",
+        "updatedAt": "2026-02-20T10:30:00Z",
+        "blocks": [
+          {
+            "id": "bb0e8400-e29b-41d4-a716-446655440001",
+            "type": "hero",
+            "position": 0,
+            "data": {
+              "headline": "Learn Web Development",
+              "subheadline": "Master modern technologies",
+              "cta_text": "Enroll Now"
+            },
+            "createdAt": "2026-02-20T10:30:00Z",
+            "updatedAt": "2026-02-20T10:30:00Z"
+          }
+        ]
+      }
+    ]
   }
 }
 ```
@@ -607,7 +692,7 @@ curl -X GET http://localhost:3001/api/v1/products/990e8400-e29b-41d4-a716-446655
 ---
 
 ### 3. Create Product
-**Scenario:** Create a new product. Use when adding courses, digital downloads, or subscription products.
+**Scenario:** Create a new product with custom styling, branding options, and CTA buttons. Pricing is managed separately in the checkout page.
 
 **Endpoint:** `POST /products`
 
@@ -619,10 +704,9 @@ curl -X POST http://localhost:3001/api/v1/products \
   -d '{
     "type": "DIGITAL",
     "title": "Advanced JavaScript Mastery",
-    "description": "Master closures, async/await, promises, and advanced JavaScript patterns to become a professional developer",
-    "price": 149.99,
-    "currency": "USD",
-    "thumbnailUrl": "https://example.com/js-course.jpg"
+    "thumbnailUrl": "https://example.com/js-course.jpg",
+    "displayStyle": "Callout",
+    "ctaButtonText": "Enroll Now"
   }'
 ```
 
@@ -637,11 +721,11 @@ curl -X POST http://localhost:3001/api/v1/products \
     "creatorId": "550e8400-e29b-41d4-a716-446655440002",
     "type": "DIGITAL",
     "title": "Advanced JavaScript Mastery",
-    "description": "Master closures, async/await, promises, and advanced JavaScript patterns to become a professional developer",
-    "price": 149.99,
-    "currency": "USD",
     "thumbnailUrl": "https://example.com/js-course.jpg",
-    "status": "DRAFT",
+    "slug": "advanced-javascript-mastery",
+    "displayStyle": "Callout",
+    "ctaButtonText": "Enroll Now",
+    "status": 0,
     "position": 0,
     "createdAt": "2026-02-22T09:45:00Z",
     "updatedAt": "2026-02-22T09:45:00Z"
@@ -649,10 +733,12 @@ curl -X POST http://localhost:3001/api/v1/products \
 }
 ```
 
+**Note:** A checkout page is automatically created when the product is created. Pricing (price, discountPrice, currency) is stored in the checkout page's `data` schema and can be updated via the page update endpoint.
+
 ---
 
 ### 4. Update Product
-**Scenario:** Edit product details like title, description, price, or status. Use in product editor.
+**Scenario:** Edit product details including title, styling, and CTA customization. Pricing updates should be done via the associated checkout page.
 
 **Endpoint:** `PATCH /products/:id`
 
@@ -663,9 +749,9 @@ curl -X PATCH http://localhost:3001/api/v1/products/992e8400-e29b-41d4-a716-4466
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -d '{
     "title": "Advanced JavaScript Mastery - Complete Edition",
-    "description": "Master closures, async/await, promises, decorators, and advanced JavaScript patterns. Includes 50+ code examples and real-world projects.",
-    "price": 129.99,
-    "thumbnailUrl": "https://example.com/js-course-updated.jpg"
+    "thumbnailUrl": "https://example.com/js-course-updated.jpg",
+    "displayStyle": "Preview",
+    "ctaButtonText": "Join Now"
   }'
 ```
 
@@ -680,11 +766,12 @@ curl -X PATCH http://localhost:3001/api/v1/products/992e8400-e29b-41d4-a716-4466
     "creatorId": "550e8400-e29b-41d4-a716-446655440002",
     "type": "DIGITAL",
     "title": "Advanced JavaScript Mastery - Complete Edition",
-    "description": "Master closures, async/await, promises, decorators, and advanced JavaScript patterns. Includes 50+ code examples and real-world projects.",
-    "price": 129.99,
     "currency": "USD",
     "thumbnailUrl": "https://example.com/js-course-updated.jpg",
-    "status": "DRAFT",
+    "slug": "advanced-javascript-mastery-complete-edition",
+    "displayStyle": "Preview",
+    "ctaButtonText": "Join Now",
+    "status": 0,
     "position": 0,
     "createdAt": "2026-02-22T09:45:00Z",
     "updatedAt": "2026-02-22T11:20:00Z"
@@ -1047,12 +1134,16 @@ curl -X GET http://localhost:3001/api/v1/stores/self \
     "pages": [
       {
         "id": "aa0e8400-e29b-41d4-a716-446655440001",
-        "slug": "course-landing",
+        "productId": "990e8400-e29b-41d4-a716-446655440001",
         "type": "checkout",
-        "position": 0,
         "status": 1,
         "data": {
-          "title": "Complete Web Development Course"
+          "title": "Complete Web Development Course",
+          "productId": "990e8400-e29b-41d4-a716-446655440001",
+          "price": 99.99,
+          "currency": "USD",
+          "discountPrice": 79.99,
+          "isDiscountPriceAvailable": true
         },
         "createdAt": "2026-02-18T10:30:00Z",
         "updatedAt": "2026-02-18T10:30:00Z",
@@ -1337,8 +1428,19 @@ curl -X PATCH http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-446655
 
 ### PAGES (Product Landing Pages)
 
+**Note:** Pages must reference a product (via required `productId` parameter). All pricing and configuration is stored in the `data` JSON field. The schema includes:
+- `title` (required): Page title (1-200 characters)
+- `productId` (required): Associated product UUID - every page must link to a product
+- `price` (optional): Product price (0 or more, 2 decimal places)
+- `currency` (optional): ISO 4217 code (USD, EUR, etc.)
+- `discountPrice` (optional): Discounted price or null
+- `isDiscountPriceAvailable` (optional): Boolean flag for discount availability
+- Additional fields can be added as needed
+
+**Auto-Creation:** A checkout page is automatically created with default pricing when a product is created. Pages are ordered by creation date (newest first).
+
 #### Get All Store Pages
-**Scenario:** Fetch all sales/product pages for a store. Use to display list of pages in builder.
+**Scenario:** Fetch all sales/product pages for a store. Use to display list of pages in builder. Pages are returned ordered by creation date (newest first).
 
 **Endpoint:** `GET /stores/:storeId/pages`
 
@@ -1353,11 +1455,18 @@ curl -X PATCH http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-446655
       "id": "880e8400-e29b-41d4-a716-446655440001",
       "storeId": "660e8400-e29b-41d4-a716-446655440001",
       "productId": "990e8400-e29b-41d4-a716-446655440001",
-      "slug": "course-landing",
       "type": "checkout",
       "status": 1,
-      "position": 0,
-      "data": {}
+      "data": {
+        "title": "Course Landing Page",
+        "productId": "990e8400-e29b-41d4-a716-446655440001",
+        "price": 99.99,
+        "currency": "USD",
+        "discountPrice": 79.99,
+        "isDiscountPriceAvailable": true
+      },
+      "createdAt": "2026-03-03T10:00:00Z",
+      "updatedAt": "2026-03-03T10:00:00Z"
     }
   ]
 }
@@ -1376,11 +1485,15 @@ curl -X POST http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-4466554
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -d '{
-    "slug": "course-landing-page",
     "type": "checkout",
     "productId": "990e8400-e29b-41d4-a716-446655440001",
     "data": {
-      "title": "Complete Web Development Course"
+      "title": "Complete Web Development Course",
+      "productId": "990e8400-e29b-41d4-a716-446655440001",
+      "price": 99.99,
+      "currency": "USD",
+      "discountPrice": 79.99,
+      "isDiscountPriceAvailable": true
     }
   }'
 ```
@@ -1395,11 +1508,18 @@ curl -X POST http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-4466554
     "id": "880e8400-e29b-41d4-a716-446655440002",
     "storeId": "660e8400-e29b-41d4-a716-446655440001",
     "productId": "990e8400-e29b-41d4-a716-446655440001",
-    "slug": "course-landing-page",
     "type": "checkout",
     "status": 0,
-    "position": 1,
-    "data": {}
+    "data": {
+      "title": "Complete Web Development Course",
+      "productId": "990e8400-e29b-41d4-a716-446655440001",
+      "price": 99.99,
+      "currency": "USD",
+      "discountPrice": 79.99,
+      "isDiscountPriceAvailable": true
+    },
+    "createdAt": "2026-03-03T10:00:00Z",
+    "updatedAt": "2026-03-03T10:00:00Z"
   }
 }
 ```
@@ -1407,7 +1527,7 @@ curl -X POST http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-4466554
 ---
 
 #### Update Page
-**Scenario:** Edit page settings or content. Use in the page builder editor.
+**Scenario:** Edit page settings, pricing, or content. Use in the page builder editor.
 
 **Endpoint:** `PATCH /pages/:id`
 
@@ -1417,12 +1537,39 @@ curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-4466554
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -d '{
-    "slug": "updated-course-landing",
     "data": {
       "title": "Master Web Development - 50% Off",
-      "description": "Limited time offer"
+      "price": 119.99,
+      "currency": "USD",
+      "discountPrice": 59.99,
+      "isDiscountPriceAvailable": true
     }
   }'
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Page updated successfully",
+  "data": {
+    "id": "880e8400-e29b-41d4-a716-446655440002",
+    "storeId": "660e8400-e29b-41d4-a716-446655440001",
+    "productId": "990e8400-e29b-41d4-a716-446655440001",
+    "type": "checkout",
+    "status": 0,
+    "data": {
+      "title": "Master Web Development - 50% Off",
+      "price": 119.99,
+      "currency": "USD",
+      "discountPrice": 59.99,
+      "isDiscountPriceAvailable": true
+    },
+    "createdAt": "2026-03-03T10:00:00Z",
+    "updatedAt": "2026-03-03T10:05:00Z"
+  }
+}
 ```
 
 ---
@@ -1431,13 +1578,6 @@ curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-4466554
 **Scenario:** Remove a product page. Use when archiving or deleting sales pages.
 
 **Endpoint:** `DELETE /pages/:id`
-
----
-
-#### Reorder Pages (Atomic)
-**Scenario:** Change the order of pages within a store.
-
-**Endpoint:** `PATCH /stores/:storeId/pages/order`
 
 ---
 
@@ -1794,8 +1934,32 @@ curl -X GET http://localhost:3001/public/store/nonexistent \
 
 ---
 
+---
+
+## Product Field Reference
+
+### DisplayStyle Options
+The `displayStyle` field controls how products are presented:
+- `Button` - Simple button/link style (default)
+- `Callout` - Highlighted callout box with emphasis
+- `Preview` - Rich preview with thumbnail and description
+
+### Slug Auto-Generation
+When creating a product, the API automatically generates a unique slug from the product title:
+- Title: "Advanced JavaScript Mastery" → slug: "advanced-javascript-mastery"
+- Title: "Web Development Guide" → slug: "web-development-guide"
+
+**Duplicate Handling:** If a slug already exists for your store:
+- First duplicate: "my-product-1"
+- Second duplicate: "my-product-2"
+- Pattern: Numeric suffixes are automatically appended to ensure uniqueness
+
+**Slug Uniqueness:** Slugs are unique per creator store, allowing multiple creators to use the same slug.
+
+---
+
 ## Date Last Updated
-February 28, 2026
+March 3, 2026
 
 ---
 

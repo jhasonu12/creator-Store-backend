@@ -2,7 +2,7 @@ import { Sequelize } from 'sequelize';
 import { StatusCodes } from 'http-status-codes';
 import { Store, StoreType, StoreStatus } from '@models/Store';
 import { StoreSection, SectionStatus, SectionType } from '@models/StoreSection';
-import { StorePage, PageStatus, PageType } from '@models/StorePage';
+import { StorePage, PageStatus, PageType, PageDataSchema } from '@models/StorePage';
 import { PageBlock, BlockType } from '@models/PageBlock';
 import { StoreTheme } from '@models/StoreTheme';
 import { AppError } from '@common/utils/response';
@@ -136,34 +136,18 @@ export class StoreBuilderService {
 
   async createPage(
     storeId: string,
-    data: { slug: string; type: string; productId?: string; data?: Record<string, unknown>; position?: number }
+    data: { type: string; productId?: string; data: PageDataSchema }
   ): Promise<StorePage> {
     const store = await Store.findByPk(storeId);
     if (!store) {
       throw new AppError(StatusCodes.NOT_FOUND, 'Store not found');
     }
 
-    // Check slug uniqueness
-    const existingPage = await StorePage.findOne({ where: { slug: data.slug } });
-    if (existingPage) {
-      throw new AppError(StatusCodes.CONFLICT, 'Slug already exists');
-    }
-
-    // Get max position
-    const lastPage = await StorePage.findOne({
-      where: { storeId },
-      order: [['position', 'DESC']],
-    });
-
-    const position = data.position ?? (lastPage ? lastPage.position + 1 : 0);
-
     const page = await StorePage.create({
       storeId,
-      slug: data.slug,
       type: data.type as PageType,
       productId: data.productId,
-      data: data.data || {},
-      position,
+      data: data.data,
       status: PageStatus.DRAFT,
     });
 
@@ -172,19 +156,11 @@ export class StoreBuilderService {
 
   async updatePage(
     pageId: string,
-    data: { slug?: string; type?: string; productId?: string; data?: Record<string, unknown> }
+    data: { type?: string; productId?: string; data?: PageDataSchema }
   ): Promise<StorePage> {
     const page = await StorePage.findByPk(pageId);
     if (!page) {
       throw new AppError(StatusCodes.NOT_FOUND, 'Page not found');
-    }
-
-    if (data.slug && data.slug !== page.slug) {
-      const existingPage = await StorePage.findOne({ where: { slug: data.slug } });
-      if (existingPage) {
-        throw new AppError(StatusCodes.CONFLICT, 'Slug already exists');
-      }
-      page.slug = data.slug;
     }
 
     if (data.type) page.type = data.type as PageType;
@@ -204,39 +180,10 @@ export class StoreBuilderService {
     await page.destroy();
   }
 
-  async reorderPages(storeId: string, pages: Array<{ id: string; position: number }>): Promise<StorePage[]> {
-    const store = await Store.findByPk(storeId);
-    if (!store) {
-      throw new AppError(StatusCodes.NOT_FOUND, 'Store not found');
-    }
-
-    const transaction = await this.sequelize.transaction();
-
-    try {
-      const updatedPages = await Promise.all(
-        pages.map(async (item) => {
-          const page = await StorePage.findByPk(item.id, { transaction });
-          if (!page || page.storeId !== storeId) {
-            throw new AppError(StatusCodes.NOT_FOUND, 'Page not found');
-          }
-          page.position = item.position;
-          await page.save({ transaction });
-          return page;
-        })
-      );
-
-      await transaction.commit();
-      return updatedPages;
-    } catch (error) {
-      await transaction.rollback();
-      throw error;
-    }
-  }
-
   async getPages(storeId: string): Promise<StorePage[]> {
     return StorePage.findAll({
       where: { storeId },
-      order: [['position', 'ASC']],
+      order: [['createdAt', 'DESC']],
     });
   }
 

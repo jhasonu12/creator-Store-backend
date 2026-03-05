@@ -43,6 +43,7 @@ export class ProductController {
 
       sendResponse(res, StatusCodes.OK, 'Product retrieved successfully', product);
     } catch (error) {
+      console.error('Error in getProduct:', error);
       if (error instanceof AppError) {
         throw error;
       }

@@ -12,15 +12,21 @@ export enum ProductStatus {
   ARCHIVED = 2,
 }
 
+export enum StyleType {
+  BUTTON = 'Button',
+  CALLOUT = 'Callout',
+  PREVIEW = 'Preview',
+}
+
 export class Product extends Model {
   declare id: string;
   declare creatorId: string;
   declare type: ProductType;
   declare title: string;
-  declare description: string;
-  declare price: number;
-  declare currency: string;
   declare thumbnailUrl: string | null;
+  declare slug: string;
+  declare displayStyle: StyleType;
+  declare ctaButtonText: string;
   declare status: ProductStatus;
   declare position: number;
   declare createdAt: Date;
@@ -55,21 +61,23 @@ export const initProduct = (sequelize: Sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      description: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-      },
-      price: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-      },
-      currency: {
-        type: DataTypes.STRING(3),
-        defaultValue: 'USD',
-      },
       thumbnailUrl: {
         type: DataTypes.STRING,
         allowNull: true,
+        defaultValue: 'https://images.unsplash.com/photo-1505228395891-9a51e7e86b52?w=400&h=300&fit=crop&crop=entropy&cs=tinysrgb&q=60&ixlib=rb-4.0.3',
+      },
+      slug: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: 'products_creator_slug_unique',
+      },
+      displayStyle: {
+        type: DataTypes.ENUM(...Object.values(StyleType)),
+        defaultValue: StyleType.BUTTON,
+      },
+      ctaButtonText: {
+        type: DataTypes.STRING,
+        defaultValue: 'Get Access',
       },
       status: {
         type: DataTypes.SMALLINT,
@@ -97,6 +105,7 @@ export const initProduct = (sequelize: Sequelize) => {
         { fields: ['creatorId'] },
         { fields: ['status'] },
         { fields: ['type'] },
+        { fields: ['creatorId', 'slug'], unique: true },
       ],
     }
   );
