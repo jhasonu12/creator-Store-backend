@@ -2347,6 +2347,346 @@ curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-4466554
 | 400 | Bad Request - Validation error | Invalid slug format, missing fields |
 | 401 | Unauthorized - Invalid credentials | Wrong password, expired token |
 | 404 | Not Found - Resource doesn't exist | User ID not found |
+---
+
+## File Upload Endpoints
+
+### 1. Get Presigned URL for Upload
+**Scenario:** Get a presigned URL from S3 to upload files directly. First step of 3-step upload process.
+
+**Endpoint:** `POST /files/presigned-url`
+
+**Request:**
+```bash
+curl -X POST http://localhost:3001/api/v1/files/presigned-url \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "originalFilename": "document.pdf",
+    "contentType": "application/pdf",
+    "entityType": "profile",
+    "folder": "documents",
+    "expiresIn": 3600
+  }'
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Presigned URL generated successfully",
+  "data": {
+    "fileId": "550e8400-e29b-41d4-a716-446655440001",
+    "presignedUrl": "https://creator-media-store-files.s3.ap-south-1.amazonaws.com/uploads/documents/1772957294015-ryfmkkvdf0b-document.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&...",
+    "s3Key": "uploads/documents/1772957294015-ryfmkkvdf0b-document.pdf",
+    "bucket": "creator-media-store-files"
+  }
+}
+```
+
+**Request Body Parameters:**
+- `originalFilename` (required): Filename with extension
+- `contentType` (required): MIME type (e.g., application/pdf, image/jpeg)
+- `entityType` (optional): Entity type - "product", "profile", "document" (default: "profile")
+- `productId` (optional): Product UUID (required if entityType is "product")
+- `folder` (optional): S3 folder path (default: "assets")
+- `expiresIn` (optional): URL expiration time in seconds (default: 3600)
+
+---
+
+### 2. Upload File to S3 Using Presigned URL
+**Scenario:** Upload file directly to S3 using presigned URL. Second step of 3-step upload process.
+
+**Important:** This is a direct upload to S3, NOT to your backend!
+
+**Endpoint:** `PUT <presignedUrl>`
+
+**Request (Upload PDF):**
+```bash
+# Get presigned URL first (from Step 1)
+PRESIGNED_URL="https://creator-media-store-files.s3.ap-south-1.amazonaws.com/uploads/documents/1772957294015-ryfmkkvdf0b-document.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&..."
+
+# Upload file to S3
+curl -X PUT "$PRESIGNED_URL" \
+  -H "Content-Type: application/pdf" \
+  --data-binary @./document.pdf
+```
+
+**Request (Upload Image):**
+```bash
+# For JPG image
+PRESIGNED_URL="https://creator-media-store-files.s3.ap-south-1.amazonaws.com/uploads/profile/..."
+
+curl -X PUT "$PRESIGNED_URL" \
+  -H "Content-Type: image/jpeg" \
+  --data-binary @./profile-image.jpg
+```
+
+**Request (Upload Word Document):**
+```bash
+# For DOCX file
+PRESIGNED_URL="https://creator-media-store-files.s3.ap-south-1.amazonaws.com/uploads/documents/..."
+
+curl -X PUT "$PRESIGNED_URL" \
+  -H "Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document" \
+  --data-binary @./document.docx
+```
+
+**Response:**
+- Status: 200 OK
+- Empty body (S3 returns no content on successful PUT)
+
+**Important Notes:**
+- ✅ Use correct `Content-Type` header matching file type
+- ✅ Use `--data-binary` for binary files (images, PDFs, etc.)
+- ✅ Do NOT include Authorization header (presigned URL has built-in auth)
+- ✅ Do NOT modify the presigned URL
+
+---
+
+### 3. Register File in Database
+**Scenario:** After file is uploaded to S3, register it in database. Third step of 3-step upload process.
+
+**Endpoint:** `POST /files/register`
+
+**Request:**
+```bash
+curl -X POST http://localhost:3001/api/v1/files/register \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fileId": "550e8400-e29b-41d4-a716-446655440001",
+    "s3Key": "uploads/documents/1772957294015-ryfmkkvdf0b-document.pdf",
+    "fileSize": 2048576
+  }'
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "File registered successfully",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "productId": null,
+    "userId": "user-uuid",
+    "fileUrl": "https://creator-media-store-files.s3.ap-south-1.amazonaws.com/uploads/documents/1772957294015-ryfmkkvdf0b-document.pdf",
+    "fileSize": 2048576,
+    "status": "uploaded",
+    "s3Key": "uploads/documents/1772957294015-ryfmkkvdf0b-document.pdf",
+    "entityType": "profile",
+    "createdAt": "2026-03-08T10:00:00Z",
+    "updatedAt": "2026-03-08T10:00:00Z"
+  }
+}
+```
+
+**Request Body Parameters:**
+- `fileId` (required): File ID from presigned URL response
+- `s3Key` (required): S3 key from presigned URL response
+- `fileSize` (required): File size in bytes
+
+---
+
+### 4. Get Product Files
+**Scenario:** Retrieve all files associated with a product.
+
+**Endpoint:** `GET /files/products/:productId`
+
+**Request:**
+```bash
+curl -X GET http://localhost:3001/api/v1/files/products/550e8400-e29b-41d4-a716-446655440001
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Product files retrieved successfully",
+  "data": [
+    {
+      "id": "file-uuid-1",
+      "productId": "product-uuid",
+      "userId": "user-uuid",
+      "fileUrl": "https://creator-media-store-files.s3.ap-south-1.amazonaws.com/...",
+      "fileSize": 2048576,
+      "status": "uploaded",
+      "s3Key": "uploads/documents/...",
+      "entityType": "product",
+      "createdAt": "2026-03-08T10:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### 5. Get File Info
+**Scenario:** Get metadata for a specific file.
+
+**Endpoint:** `GET /files/:fileId`
+
+**Request:**
+```bash
+curl -X GET http://localhost:3001/api/v1/files/550e8400-e29b-41d4-a716-446655440001
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "File info retrieved successfully",
+  "data": {
+    "id": "file-uuid",
+    "productId": null,
+    "userId": "user-uuid",
+    "fileUrl": "https://creator-media-store-files.s3.ap-south-1.amazonaws.com/...",
+    "fileSize": 2048576,
+    "status": "uploaded",
+    "s3Key": "uploads/documents/...",
+    "entityType": "profile"
+  }
+}
+```
+
+---
+
+### 6. Get Download URL (Signed)
+**Scenario:** Generate a time-limited signed URL for downloading a private file.
+
+**Endpoint:** `GET /files/:fileId/download`
+
+**Request:**
+```bash
+curl -X GET "http://localhost:3001/api/v1/files/550e8400-e29b-41d4-a716-446655440001/download?expiresIn=7200" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Download URL generated successfully",
+  "data": {
+    "downloadUrl": "https://creator-media-store-files.s3.ap-south-1.amazonaws.com/uploads/documents/...?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature=..."
+  }
+}
+```
+
+**Query Parameters:**
+- `expiresIn` (optional): URL expiration time in seconds (60-86400, default: 3600)
+
+---
+
+### 7. Delete File
+**Scenario:** Delete a file from S3 and database.
+
+**Endpoint:** `DELETE /files/:fileId`
+
+**Request:**
+```bash
+curl -X DELETE http://localhost:3001/api/v1/files/550e8400-e29b-41d4-a716-446655440001 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "File deleted successfully"
+}
+```
+
+---
+
+## File Upload Flow Example
+
+```bash
+#!/bin/bash
+
+# Configuration
+TOKEN="YOUR_JWT_TOKEN"
+FILE_PATH="./document.pdf"
+API_BASE="http://localhost:3001/api/v1"
+
+echo "📁 Step 1: Get presigned URL..."
+RESPONSE=$(curl -s -X POST "$API_BASE/files/presigned-url" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "originalFilename": "document.pdf",
+    "contentType": "application/pdf",
+    "entityType": "profile"
+  }')
+
+PRESIGNED_URL=$(echo $RESPONSE | jq -r '.data.presignedUrl')
+FILE_ID=$(echo $RESPONSE | jq -r '.data.fileId')
+S3_KEY=$(echo $RESPONSE | jq -r '.data.s3Key')
+
+echo "✅ Presigned URL received: $PRESIGNED_URL"
+echo "   File ID: $FILE_ID"
+echo "   S3 Key: $S3_KEY"
+
+echo -e "\n📤 Step 2: Upload file to S3..."
+curl -X PUT "$PRESIGNED_URL" \
+  -H "Content-Type: application/pdf" \
+  --data-binary @"$FILE_PATH"
+
+echo -e "\n✅ File uploaded to S3"
+
+echo -e "\n💾 Step 3: Register file in database..."
+FILE_SIZE=$(stat -f%z "$FILE_PATH")  # macOS (use 'stat -c%s' on Linux)
+REGISTER_RESPONSE=$(curl -s -X POST "$API_BASE/files/register" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"fileId\": \"$FILE_ID\",
+    \"s3Key\": \"$S3_KEY\",
+    \"fileSize\": $FILE_SIZE
+  }")
+
+echo "✅ File registered successfully!"
+echo $REGISTER_RESPONSE | jq '.data'
+```
+
+---
+
+## Postman Collection Steps
+
+1. **Environment Setup:**
+   - Set `{{baseUrl}}` = `http://localhost:3001/api/v1`
+   - Set `{{token}}` = Your JWT token from login
+
+2. **Step 1 - Get Presigned URL:**
+   ```
+   POST {{baseUrl}}/files/presigned-url
+   Headers: Authorization: Bearer {{token}}
+   Body: (JSON from Step 3.1 example)
+   ```
+   - Extract `presignedUrl`, `fileId`, `s3Key` to environment variables
+
+3. **Step 2 - Upload to S3:**
+   ```
+   PUT {{presignedUrl}}
+   Headers: Content-Type: application/pdf
+   Body: Select "binary" mode and choose your file
+   ```
+
+4. **Step 3 - Register File:**
+   ```
+   POST {{baseUrl}}/files/register
+   Headers: Authorization: Bearer {{token}}
+   Body: (JSON from Step 3.3 example)
+   ```
+
+---
+
 | 409 | Conflict - Resource already exists | Email/username already taken |
 | 500 | Internal Server Error | Server-side error |
 
@@ -2360,6 +2700,12 @@ curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-4466554
 4. **Check pagination** by varying page and limit parameters
 5. **Verify token expiry** by waiting 24 hours or using expired tokens
 6. **Use different scenarios** to test all business logic paths
+7. **File Upload Testing:**
+   - Test with different file types (PDF, images, documents)
+   - Verify correct Content-Type headers
+   - Check file size limits (MAX_FILE_SIZE in .env)
+   - Verify S3 file appearance after upload
+   - Test file deletion and S3 removal
 
 ---
 
@@ -2388,7 +2734,6 @@ When creating a product, the API automatically generates a unique slug from the 
 ---
 
 ## Date Last Updated
-March 3, 2026
+March 8, 2026
 
 ---
-

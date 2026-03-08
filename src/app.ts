@@ -19,6 +19,7 @@ import publicRoutes from '@modules/public/public.routes';
 
 import { logger } from '@common/utils/logger';
 import { sendResponse } from '@common/utils/response';
+import fileUploadRoutes from '@modules/file-upload/file-upload.routes';
 
 export const createApp = (): Express => {
   const app = express();
@@ -55,6 +56,7 @@ export const createApp = (): Express => {
   app.use(`/api/${config.app.apiVersion}/store-slugs`, storeSlugRoutes);
   app.use(`/api/${config.app.apiVersion}/stores`, storeBuilderRoutes);
   app.use(`/api/${config.app.apiVersion}/products`, productRoutes);
+  app.use(`/api/${config.app.apiVersion}/files`, fileUploadRoutes);
 
   // Public Routes (no authentication required)
   app.use('/public', publicRoutes);
