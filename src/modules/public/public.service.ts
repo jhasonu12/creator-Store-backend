@@ -54,7 +54,7 @@ export class PublicService {
         {
           model: StoreTheme,
           as: 'theme',
-          attributes: ['id', 'config', 'updatedAt'],
+          attributes: ['id', 'config', 'updatedAt', 'name'],
         },
       ],
     });

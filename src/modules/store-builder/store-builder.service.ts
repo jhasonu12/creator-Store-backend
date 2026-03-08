@@ -280,6 +280,7 @@ export class StoreBuilderService {
     if (!theme) {
       theme = await StoreTheme.create({
         storeId,
+        name: 'minima',
         config,
       });
     } else {

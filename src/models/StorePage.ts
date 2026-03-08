@@ -40,6 +40,7 @@ export interface DigitalAsset {
 export interface PageDataSchema {
   // Page metadata
   title: string;
+  description?: string;
   
   // Pricing information (for checkout pages)
   price?: number;

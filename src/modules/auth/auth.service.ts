@@ -226,6 +226,7 @@ export class AuthService {
       await StoreTheme.create(
         {
           storeId: store.id,
+          name: 'minima',
           config: {
             primaryColor: '#000000',
             secondaryColor: '#FFFFFF',

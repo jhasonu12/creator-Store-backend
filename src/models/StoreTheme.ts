@@ -3,6 +3,7 @@ import { DataTypes, Model, Sequelize } from 'sequelize';
 export class StoreTheme extends Model {
   declare id: string;
   declare storeId: string;
+  declare name: string;
   declare config: Record<string, unknown>;
   declare updatedAt: Date;
 }
@@ -19,6 +20,11 @@ export const initStoreTheme = (sequelize: Sequelize): typeof StoreTheme => {
         type: DataTypes.UUID,
         allowNull: false,
         unique: true,
+      },
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'minima',
       },
       config: {
         type: DataTypes.JSON,

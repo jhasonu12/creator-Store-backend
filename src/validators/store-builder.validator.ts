@@ -25,6 +25,7 @@ const digitalAssetSchema = Joi.object({
 const pageDataSchema = Joi.object({
   // Page metadata (required)
   title: Joi.string().min(1).max(200).required(),
+  description: Joi.string().optional(),
   
   // Pricing information
   price: Joi.number().min(0).precision(2).optional(),

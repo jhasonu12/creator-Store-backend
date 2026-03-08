@@ -112,6 +112,7 @@ export class ProductController {
 
       sendResponse(res, StatusCodes.OK, 'Product deleted successfully');
     } catch (error) {
+      console.error('Error in deleteProduct:', error);
       if (error instanceof AppError) {
         throw error;
       }
