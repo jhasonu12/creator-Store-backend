@@ -183,8 +183,8 @@ export const initializeModels = (sequelize: Sequelize) => {
   Store.hasOne(StoreTheme, { foreignKey: 'storeId', onDelete: 'CASCADE', as: 'theme' });
   StoreTheme.belongsTo(Store, { foreignKey: 'storeId' });
 
-  // StorePage -> Product (1:N)
-  Product.hasMany(StorePage, { foreignKey: 'productId', onDelete: 'SET NULL', as: 'pages' });
+  // StorePage -> Product (1:N) - cascade delete pages when product is deleted
+  Product.hasMany(StorePage, { foreignKey: 'productId', onDelete: 'CASCADE', as: 'pages' });
   StorePage.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 
   return {

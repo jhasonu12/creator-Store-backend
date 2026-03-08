@@ -540,6 +540,7 @@ curl -X GET http://localhost:3001/api/v1/products \
       "creatorId": "550e8400-e29b-41d4-a716-446655440002",
       "type": "DIGITAL",
       "title": "Complete Web Development Course",
+      "subtitle": "From basics to advanced concepts",
       "thumbnailUrl": "https://example.com/course-thumbnail.jpg",
       "displayStyle": "Callout",
       "ctaButtonText": "Enroll Now",
@@ -584,6 +585,7 @@ curl -X GET http://localhost:3001/api/v1/products \
       "creatorId": "550e8400-e29b-41d4-a716-446655440002",
       "type": "COURSE",
       "title": "Advanced React Patterns",
+      "subtitle": "Master advanced React concepts and hooks",
       "thumbnailUrl": "https://example.com/react-course.jpg",
       "displayStyle": "Preview",
       "ctaButtonText": "Enroll Now",
@@ -638,6 +640,7 @@ curl -X GET http://localhost:3001/api/v1/products/990e8400-e29b-41d4-a716-446655
     "creatorId": "550e8400-e29b-41d4-a716-446655440002",
     "type": "DIGITAL",
     "title": "Complete Web Development Course",
+    "subtitle": "From basics to advanced concepts",
     "thumbnailUrl": "https://example.com/course-thumbnail.jpg",
     "displayStyle": "Callout",
     "ctaButtonText": "Enroll Now",
@@ -704,6 +707,7 @@ curl -X POST http://localhost:3001/api/v1/products \
   -d '{
     "type": "DIGITAL",
     "title": "Advanced JavaScript Mastery",
+    "subtitle": "Master modern JavaScript concepts and best practices",
     "thumbnailUrl": "https://example.com/js-course.jpg",
     "displayStyle": "Callout",
     "ctaButtonText": "Enroll Now"
@@ -721,6 +725,7 @@ curl -X POST http://localhost:3001/api/v1/products \
     "creatorId": "550e8400-e29b-41d4-a716-446655440002",
     "type": "DIGITAL",
     "title": "Advanced JavaScript Mastery",
+    "subtitle": "Master modern JavaScript concepts and best practices",
     "thumbnailUrl": "https://example.com/js-course.jpg",
     "slug": "advanced-javascript-mastery",
     "displayStyle": "Callout",
@@ -1435,6 +1440,8 @@ curl -X PATCH http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-446655
 - `currency` (optional): ISO 4217 code (USD, EUR, etc.)
 - `discountPrice` (optional): Discounted price or null
 - `isDiscountPriceAvailable` (optional): Boolean flag for discount availability
+- `form` (optional): Form configuration for lead capture with `collectName` and `collectEmail` boolean flags
+- `digitalAssets` (optional): Array of downloadable files with `url`, `name`, and `assetType` ('file' or 'link') for each asset
 - Additional fields can be added as needed
 
 **Auto-Creation:** A checkout page is automatically created with default pricing when a product is created. Pages are ordered by creation date (newest first).
@@ -1459,7 +1466,6 @@ curl -X PATCH http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-446655
       "status": 1,
       "data": {
         "title": "Course Landing Page",
-        "productId": "990e8400-e29b-41d4-a716-446655440001",
         "price": 99.99,
         "currency": "USD",
         "discountPrice": 79.99,
@@ -1474,13 +1480,13 @@ curl -X PATCH http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-446655
 
 ---
 
-#### Create Page
-**Scenario:** Create a new product landing/checkout page. Use when creating sales funnels or product pages.
+#### Get Single Page
+**Scenario:** Fetch a specific page configuration for editing in the page builder. Returns page with all data fields.
 
-**Endpoint:** `POST /stores/:storeId/pages`
+**Endpoint:** `GET /pages/:id`
 
-**Request:**
-```bash
+**Response (200 OK):**
+```
 curl -X POST http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-446655440001/pages \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
@@ -1489,7 +1495,6 @@ curl -X POST http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-4466554
     "productId": "990e8400-e29b-41d4-a716-446655440001",
     "data": {
       "title": "Complete Web Development Course",
-      "productId": "990e8400-e29b-41d4-a716-446655440001",
       "price": 99.99,
       "currency": "USD",
       "discountPrice": 79.99,
@@ -1512,7 +1517,6 @@ curl -X POST http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-4466554
     "status": 0,
     "data": {
       "title": "Complete Web Development Course",
-      "productId": "990e8400-e29b-41d4-a716-446655440001",
       "price": 99.99,
       "currency": "USD",
       "discountPrice": 79.99,
@@ -1574,17 +1578,156 @@ curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-4466554
 
 ---
 
-#### Delete Page
-**Scenario:** Remove a product page. Use when archiving or deleting sales pages.
+#### Create Page with Form Configuration (Lead Capture)
+**Scenario:** Create a page that collects customer information (name and/or email) before checkout.
 
-**Endpoint:** `DELETE /pages/:id`
+**Endpoint:** `POST /stores/:storeId/pages`
+
+**Request:**
+```bash
+curl -X POST http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-446655440001/pages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -d '{
+    "type": "checkout",
+    "productId": "990e8400-e29b-41d4-a716-446655440001",
+    "data": {
+      "title": "Course Registration",
+      "price": 99.99,
+      "currency": "USD",
+      "form": {
+        "collectName": true,
+        "collectEmail": true
+      }
+    }
+  }'
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "statusCode": 201,
+  "message": "Page created successfully",
+  "data": {
+    "id": "880e8400-e29b-41d4-a716-446655440003",
+    "storeId": "660e8400-e29b-41d4-a716-446655440001",
+    "productId": "990e8400-e29b-41d4-a716-446655440001",
+    "type": "checkout",
+    "status": 0,
+    "data": {
+      "title": "Course Registration",
+      "price": 99.99,
+      "currency": "USD",
+      "form": {
+        "collectName": true,
+        "collectEmail": true
+      }
+    },
+    "createdAt": "2026-03-07T10:00:00Z",
+    "updatedAt": "2026-03-07T10:00:00Z"
+  }
+}
+```
 
 ---
 
-### PAGE BLOCKS (Sales Page Builder)
+#### Create Page with Digital Assets (Downloadable Files)
+**Scenario:** Create a digital download page that includes files for customers to download (PDFs, guides, templates, etc.).
+
+**Endpoint:** `POST /stores/:storeId/pages`
+
+**Request:**
+```bash
+curl -X POST http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-446655440001/pages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -d '{
+    "type": "digital-download",
+    "productId": "990e8400-e29b-41d4-a716-446655440002",
+    "data": {
+      "title": "Complete Marketing Templates Bundle",
+      "price": 49.99,
+      "currency": "USD",
+      "form": {
+        "collectName": true,
+        "collectEmail": true
+      },
+      "digitalAssets": [
+        {
+          "url": "https://cdn.example.com/marketing-guide.pdf",
+          "name": "Marketing Strategy Guide.pdf",
+          "assetType": "file"
+        },
+        {
+          "url": "https://cdn.example.com/email-templates.zip",
+          "name": "Email Templates.zip",
+          "assetType": "file"
+        },
+        {
+          "url": "https://cdn.example.com/social-media-calendar.xlsx",
+          "name": "Social Media Calendar.xlsx",
+          "assetType": "file"
+        }
+      ]
+    }
+  }'
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "statusCode": 201,
+  "message": "Page created successfully",
+  "data": {
+    "id": "880e8400-e29b-41d4-a716-446655440004",
+    "storeId": "660e8400-e29b-41d4-a716-446655440001",
+    "productId": "990e8400-e29b-41d4-a716-446655440002",
+    "type": "digital-download",
+    "status": 0,
+    "data": {
+      "title": "Complete Marketing Templates Bundle",
+      "price": 49.99,
+      "currency": "USD",
+      "form": {
+        "collectName": true,
+        "collectEmail": true
+      },
+      "digitalAssets": [
+        {
+          "url": "https://cdn.example.com/marketing-guide.pdf",
+          "name": "Marketing Strategy Guide.pdf",
+          "assetType": "file"
+        },
+        {
+          "url": "https://cdn.example.com/email-templates.zip",
+          "name": "Email Templates.zip",
+          "assetType": "file"
+        },
+        {
+          "url": "https://cdn.example.com/social-media-calendar.xlsx",
+          "name": "Social Media Calendar.xlsx",
+          "assetType": "file"
+        }
+      ]
+    },
+    "createdAt": "2026-03-07T10:00:00Z",
+    "updatedAt": "2026-03-07T10:00:00Z"
+  }
+}
+```
+
+---
+
+### PAGE BLOCKS (Reviews & FAQs)
+
+**Note:** Pages are automatically deleted when their associated product is deleted (CASCADE delete).
+
+Checkout pages support two types of blocks: **Testimonials (Reviews)** and **FAQs**. These provide social proof and answer customer questions.
 
 #### Get All Page Blocks
-**Scenario:** Fetch all blocks/sections within a page. Use to render the page builder preview.
+**Scenario:** Fetch all review and FAQ blocks within a checkout page.
 
 **Endpoint:** `GET /pages/:pageId/blocks`
 
@@ -1598,14 +1741,28 @@ curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-4466554
     {
       "id": "990e8400-e29b-41d4-a716-446655440001",
       "pageId": "880e8400-e29b-41d4-a716-446655440002",
-      "type": "hero",
+      "type": "testimonial",
       "position": 0,
       "data": {
-        "headline": "Learn Web Development",
-        "subheadline": "Master modern technologies",
-        "cta_text": "Enroll Now",
-        "background_image": "https://..."
-      }
+        "name": "Jane Doe",
+        "image": "https://example.com/jane.jpg",
+        "content": "This course completely transformed my understanding of web development. The instructor's teaching style was excellent!",
+        "rating": 5
+      },
+      "createdAt": "2026-03-07T10:00:00Z",
+      "updatedAt": "2026-03-07T10:00:00Z"
+    },
+    {
+      "id": "991e8400-e29b-41d4-a716-446655440001",
+      "pageId": "880e8400-e29b-41d4-a716-446655440002",
+      "type": "faq",
+      "position": 1,
+      "data": {
+        "question": "Do I need any prior experience?",
+        "answer": "No, this course is designed for complete beginners. We start with the fundamentals and progress step by step."
+      },
+      "createdAt": "2026-03-07T11:00:00Z",
+      "updatedAt": "2026-03-07T11:00:00Z"
     }
   ]
 }
@@ -1613,8 +1770,8 @@ curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-4466554
 
 ---
 
-#### Create Block
-**Scenario:** Add a new block to a page (hero, testimonial, pricing, etc.). Use in the page builder to add content sections.
+#### Create Block (Testimonial)
+**Scenario:** Add a customer review/testimonial to the checkout page.
 
 **Endpoint:** `POST /pages/:pageId/blocks`
 
@@ -1625,12 +1782,12 @@ curl -X POST http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-44665544
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -d '{
     "type": "testimonial",
-    "position": 2,
+    "position": 0,
     "data": {
-      "author": "Jane Doe",
-      "role": "Software Engineer",
-      "text": "This course transformed my career!",
-      "image": "https://..."
+      "name": "Jane Doe",
+      "image": "https://example.com/jane.jpg",
+      "content": "This course completely transformed my career! I landed my dream job within 3 months.",
+      "rating": 5
     }
   }'
 ```
@@ -1645,13 +1802,56 @@ curl -X POST http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-44665544
     "id": "990e8400-e29b-41d4-a716-446655440002",
     "pageId": "880e8400-e29b-41d4-a716-446655440002",
     "type": "testimonial",
-    "position": 2,
+    "position": 0,
     "data": {
-      "author": "Jane Doe",
-      "role": "Software Engineer",
-      "text": "This course transformed my career!",
-      "image": "https://..."
+      "name": "Jane Doe",
+      "image": "https://example.com/jane.jpg",
+      "content": "This course completely transformed my career! I landed my dream job within 3 months.",
+      "rating": 5
+    },
+    "createdAt": "2026-03-07T10:00:00Z",
+    "updatedAt": "2026-03-07T10:00:00Z"
+  }
+}
+```
+
+#### Create Block (FAQ)
+**Scenario:** Add a frequently asked question to the checkout page.
+
+**Endpoint:** `POST /pages/:pageId/blocks`
+
+**Request:**
+```bash
+curl -X POST http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-446655440002/blocks \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -d '{
+    "type": "faq",
+    "position": 1,
+    "data": {
+      "question": "What payment methods do you accept?",
+      "answer": "We accept all major credit cards (Visa, Mastercard, American Express), PayPal, and bank transfers."
     }
+  }'
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "statusCode": 201,
+  "message": "Block created successfully",
+  "data": {
+    "id": "991e8400-e29b-41d4-a716-446655440002",
+    "pageId": "880e8400-e29b-41d4-a716-446655440002",
+    "type": "faq",
+    "position": 1,
+    "data": {
+      "question": "What payment methods do you accept?",
+      "answer": "We accept all major credit cards (Visa, Mastercard, American Express), PayPal, and bank transfers."
+    },
+    "createdAt": "2026-03-07T11:00:00Z",
+    "updatedAt": "2026-03-07T11:00:00Z"
   }
 }
 ```
@@ -1659,23 +1859,52 @@ curl -X POST http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-44665544
 ---
 
 #### Update Block
-**Scenario:** Edit block content. Use in the block editor.
+**Scenario:** Edit a testimonial or FAQ block content.
 
 **Endpoint:** `PATCH /blocks/:id`
+
+**Request:**
+```bash
+curl -X PATCH http://localhost:3001/api/v1/blocks/990e8400-e29b-41d4-a716-446655440002 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -d '{
+    "data": {
+      "name": "Jane Doe",
+      "image": "https://example.com/jane.jpg",
+      "content": "Absolutely fantastic course! The best investment I made in my career.",
+      "rating": 5
+    }
+  }'
+```
 
 ---
 
 #### Delete Block
-**Scenario:** Remove a block from the page.
+**Scenario:** Remove a testimonial or FAQ from the checkout page.
 
 **Endpoint:** `DELETE /blocks/:id`
 
 ---
 
 #### Reorder Blocks (Atomic)
-**Scenario:** Change the order of blocks on a page.
+**Scenario:** Change the order of testimonials and FAQs on the checkout page.
 
 **Endpoint:** `PATCH /pages/:pageId/blocks/order`
+
+**Request:**
+```bash
+curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-446655440002/blocks/order \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -d '{
+    "blocks": [
+      {"id": "990e8400-e29b-41d4-a716-446655440002", "position": 0},
+      {"id": "991e8400-e29b-41d4-a716-446655440002", "position": 1},
+      {"id": "992e8400-e29b-41d4-a716-446655440002", "position": 2}
+    ]
+  }'
+```
 
 ---
 
@@ -1904,6 +2133,206 @@ curl -X GET http://localhost:3001/public/store/nonexistent \
   "statusCode": 404,
   "message": "Store not found or is not active",
   "data": null
+}
+```
+
+---
+
+### Page Builder - Optimized API Endpoints
+
+#### Update Page (Data, Type, or ProductId)
+**Scenario:** Editor updates page content, type, or associated product. Use for pricing updates, form configuration, digital assets, and page settings.
+
+**Endpoint:** `PATCH /pages/:id`
+
+**Request - Update Page Data:**
+```bash
+curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-446655440002 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -d '{
+    "data": {
+      "title": "Master Web Development - Updated",
+      "price": 119.99,
+      "currency": "USD",
+      "discountPrice": 79.99,
+      "isDiscountPriceAvailable": true,
+      "form": {
+        "collectName": true,
+        "collectEmail": true
+      },
+      "digitalAssets": [
+        {
+          "url": "https://cdn.example.com/starter-guide.pdf",
+          "name": "Starter Guide.pdf",
+          "assetType": "file"
+        }
+      ]
+    }
+  }'
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Page updated successfully",
+  "data": {
+    "id": "880e8400-e29b-41d4-a716-446655440002",
+    "storeId": "660e8400-e29b-41d4-a716-446655440001",
+    "productId": "990e8400-e29b-41d4-a716-446655440001",
+    "type": "checkout",
+    "status": 0,
+    "data": {
+      "title": "Master Web Development - Updated",
+      "price": 119.99,
+      "currency": "USD",
+      "discountPrice": 79.99,
+      "isDiscountPriceAvailable": true,
+      "form": {
+        "collectName": true,
+        "collectEmail": true
+      },
+      "digitalAssets": [
+        {
+          "url": "https://cdn.example.com/starter-guide.pdf",
+          "name": "Starter Guide.pdf",
+          "assetType": "file"
+        }
+      ]
+    },
+    "createdAt": "2026-03-07T10:00:00Z",
+    "updatedAt": "2026-03-07T10:15:00Z"
+  }
+}
+```
+
+**Request - Update Page Type:**
+```bash
+curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-446655440002 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -d '{
+    "type": "digital-download"
+  }'
+```
+
+**Request - Associate with Different Product:**
+```bash
+curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-446655440002 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -d '{
+    "productId": "990e8400-e29b-41d4-a716-446655440099"
+  }'
+```
+
+---
+
+#### Update Block (Testimonial/FAQ)
+**Scenario:** User edits a testimonial or FAQ on the checkout page. Updates the block data while preserving position.
+
+**Endpoint:** `PATCH /blocks/:id`
+
+**Request - Update Testimonial:**
+```bash
+curl -X PATCH http://localhost:3001/api/v1/blocks/990e8400-e29b-41d4-a716-446655440005 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -d '{
+    "type": "testimonial",
+    "data": {
+      "name": "Jane Smith",
+      "role": "Product Manager",
+      "image": "https://example.com/jane-smith.jpg",
+      "content": "This course completely transformed my career. The hands-on projects were invaluable.",
+      "rating": 5
+    }
+  }'
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Block updated successfully",
+  "data": {
+    "id": "990e8400-e29b-41d4-a716-446655440005",
+    "pageId": "880e8400-e29b-41d4-a716-446655440002",
+    "type": "testimonial",
+    "position": 0,
+    "data": {
+      "name": "Jane Smith",
+      "role": "Product Manager",
+      "image": "https://example.com/jane-smith.jpg",
+      "content": "This course completely transformed my career. The hands-on projects were invaluable.",
+      "rating": 5
+    },
+    "createdAt": "2026-03-07T10:00:00Z",
+    "updatedAt": "2026-03-07T10:20:00Z"
+  }
+}
+```
+
+---
+
+#### Reorder Blocks (Drag & Drop)
+**Scenario:** User reorders testimonials and FAQs on the page via drag-and-drop. Batch update all positions in single request.
+
+**Endpoint:** `PATCH /pages/:pageId/blocks/order`
+
+**Request:**
+```bash
+curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-446655440002/blocks/order \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -d '{
+    "blocks": [
+      {
+        "id": "991e8400-e29b-41d4-a716-446655440001",
+        "position": 0
+      },
+      {
+        "id": "990e8400-e29b-41d4-a716-446655440005",
+        "position": 1
+      },
+      {
+        "id": "992e8400-e29b-41d4-a716-446655440001",
+        "position": 2
+      }
+    ]
+  }'
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Blocks reordered successfully",
+  "data": {
+    "pageId": "880e8400-e29b-41d4-a716-446655440002",
+    "reorderedCount": 3,
+    "blocks": [
+      {
+        "id": "991e8400-e29b-41d4-a716-446655440001",
+        "position": 0,
+        "type": "faq"
+      },
+      {
+        "id": "990e8400-e29b-41d4-a716-446655440005",
+        "position": 1,
+        "type": "testimonial"
+      },
+      {
+        "id": "992e8400-e29b-41d4-a716-446655440001",
+        "position": 2,
+        "type": "testimonial"
+      }
+    ]
+  }
 }
 ```
 

@@ -9,6 +9,7 @@ export const createProductSchema = Joi.object({
       .valid(...Object.values(ProductType))
       .required(),
     title: Joi.string().min(3).max(200).required(),
+    subtitle: Joi.string().max(500).optional().allow(null),
     thumbnailUrl: Joi.string().uri().optional().allow(null),
     displayStyle: Joi.string()
       .valid(...Object.values(StyleType))
@@ -27,6 +28,7 @@ export const updateProductSchema = Joi.object({
       .valid(...Object.values(ProductType))
       .optional(),
     title: Joi.string().min(3).max(200).optional(),
+    subtitle: Joi.string().max(500).optional().allow(null),
     thumbnailUrl: Joi.string().uri().optional().allow(null),
     displayStyle: Joi.string()
       .valid(...Object.values(StyleType))

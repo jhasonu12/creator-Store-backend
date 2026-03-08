@@ -94,14 +94,8 @@ router.post('/:storeId/pages', authMiddleware, validateRequest(createPageSchema)
  */
 router.patch('/pages/:id', authMiddleware, validateRequest(updatePageSchema), storeBuilderController.updatePage);
 
-/**
- * @route DELETE /pages/:id
- * @desc Delete a page
- * @access Private
- */
-router.delete('/pages/:id', authMiddleware, storeBuilderController.deletePage);
-
 // ========== BLOCK ROUTES (Sales Page Blocks) ==========
+// Note: Pages are deleted automatically when their associated product is deleted (CASCADE)
 
 /**
  * @route GET /pages/:pageId/blocks

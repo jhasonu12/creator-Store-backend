@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import { Store, StoreType, StoreStatus } from '@models/Store';
 import { StoreSection, SectionStatus, SectionType } from '@models/StoreSection';
 import { StorePage, PageStatus, PageType, PageDataSchema } from '@models/StorePage';
-import { PageBlock, BlockType } from '@models/PageBlock';
+import { PageBlock, BlockType, BlockDataSchema } from '@models/PageBlock';
 import { StoreTheme } from '@models/StoreTheme';
 import { AppError } from '@common/utils/response';
 import { getSequelizeInstance } from '@config/database';
@@ -171,15 +171,6 @@ export class StoreBuilderService {
     return page;
   }
 
-  async deletePage(pageId: string): Promise<void> {
-    const page = await StorePage.findByPk(pageId);
-    if (!page) {
-      throw new AppError(StatusCodes.NOT_FOUND, 'Page not found');
-    }
-
-    await page.destroy();
-  }
-
   async getPages(storeId: string): Promise<StorePage[]> {
     return StorePage.findAll({
       where: { storeId },
@@ -187,9 +178,9 @@ export class StoreBuilderService {
     });
   }
 
-  // ========== PAGE BLOCKS (Sales Builder) ==========
+  // ========== PAGE BLOCKS (Reviews & FAQs) ==========
 
-  async createBlock(pageId: string, data: { type: string; data: Record<string, unknown>; position?: number }): Promise<PageBlock> {
+  async createBlock(pageId: string, data: { type: string; data: BlockDataSchema; position?: number }): Promise<PageBlock> {
     const page = await StorePage.findByPk(pageId);
     if (!page) {
       throw new AppError(StatusCodes.NOT_FOUND, 'Page not found');
@@ -206,21 +197,21 @@ export class StoreBuilderService {
     const block = await PageBlock.create({
       pageId,
       type: data.type as BlockType,
-      data: data.data,
+      data: data.data as BlockDataSchema,
       position,
     });
 
     return block;
   }
 
-  async updateBlock(blockId: string, data: { type?: string; data?: Record<string, unknown> }): Promise<PageBlock> {
+  async updateBlock(blockId: string, data: { type?: string; data?: BlockDataSchema }): Promise<PageBlock> {
     const block = await PageBlock.findByPk(blockId);
     if (!block) {
       throw new AppError(StatusCodes.NOT_FOUND, 'Block not found');
     }
 
     if (data.type) block.type = data.type as BlockType;
-    if (data.data) block.data = data.data;
+    if (data.data) block.data = data.data as BlockDataSchema;
 
     await block.save();
     return block;

@@ -22,7 +22,7 @@ export class PublicService {
         {
           model: Product,
           as: 'products',
-          attributes: ['id', 'type', 'title', 'thumbnailUrl', 'displayStyle', 'ctaButtonText', 'status', 'position', 'createdAt', 'updatedAt'],
+          attributes: ['id', 'type', 'title', 'subtitle', 'thumbnailUrl', 'displayStyle', 'ctaButtonText', 'status', 'position', 'createdAt', 'updatedAt'],
           order: [['position', 'ASC']],
           where: { status: ProductStatus.PUBLISHED },
           required: false,

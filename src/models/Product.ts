@@ -23,6 +23,7 @@ export class Product extends Model {
   declare creatorId: string;
   declare type: ProductType;
   declare title: string;
+  declare subtitle: string | null;
   declare thumbnailUrl: string | null;
   declare slug: string;
   declare displayStyle: StyleType;
@@ -60,6 +61,10 @@ export const initProduct = (sequelize: Sequelize) => {
       title: {
         type: DataTypes.STRING,
         allowNull: false,
+      },
+      subtitle: {
+        type: DataTypes.STRING(500),
+        allowNull: true,
       },
       thumbnailUrl: {
         type: DataTypes.STRING,

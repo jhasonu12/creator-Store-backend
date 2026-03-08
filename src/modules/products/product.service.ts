@@ -75,7 +75,7 @@ export class ProductService {
 
     return Product.findAll({
       where: { creatorId: creator.id },
-      attributes: ['id', 'type', 'title', 'thumbnailUrl', 'displayStyle', 'ctaButtonText', 'status', 'position', 'createdAt', 'updatedAt'],
+      attributes: ['id', 'type', 'title', 'subtitle', 'thumbnailUrl', 'displayStyle', 'ctaButtonText', 'status', 'position', 'createdAt', 'updatedAt'],
       order: [['position', 'ASC']],
       include: [
         {
@@ -101,7 +101,7 @@ export class ProductService {
    */
   async getProduct(productId: string): Promise<Product> {
     const product = await Product.findByPk(productId, {
-      attributes: ['id', 'type', 'title', 'thumbnailUrl', 'displayStyle', 'ctaButtonText', 'status', 'position', 'createdAt', 'updatedAt'],
+      attributes: ['id', 'type', 'title', 'subtitle', 'thumbnailUrl', 'displayStyle', 'ctaButtonText', 'status', 'position', 'createdAt', 'updatedAt'],
       include: [
         {
           model: StorePage,
@@ -133,6 +133,7 @@ export class ProductService {
     data: {
       type: ProductType;
       title: string;
+      subtitle?: string | null;
       thumbnailUrl?: string | null;
       displayStyle?: string;
       ctaButtonText?: string;
@@ -163,6 +164,7 @@ export class ProductService {
       creatorId: creator.id,
       type: data.type,
       title: data.title,
+      subtitle: data.subtitle || null,
       thumbnailUrl: data.thumbnailUrl || 'https://images.unsplash.com/photo-1505228395891-9a51e7e86b52?w=400&h=300&fit=crop&crop=entropy&cs=tinysrgb&q=60&ixlib=rb-4.0.3',
       slug,
       displayStyle: data.displayStyle || 'Button',
@@ -205,6 +207,7 @@ export class ProductService {
     data: {
       type?: ProductType;
       title?: string;
+      subtitle?: string | null;
       thumbnailUrl?: string | null;
       displayStyle?: StyleType;
       ctaButtonText?: string;
@@ -228,6 +231,7 @@ export class ProductService {
     // Update fields
     if (data.type) product.type = data.type;
     if (data.title) product.title = data.title;
+    if (data.subtitle !== undefined) product.subtitle = data.subtitle;
     if (data.thumbnailUrl !== undefined) product.thumbnailUrl = data.thumbnailUrl;
     if (data.displayStyle) product.displayStyle = data.displayStyle;
     if (data.ctaButtonText) product.ctaButtonText = data.ctaButtonText;

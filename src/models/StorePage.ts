@@ -16,19 +16,42 @@ export enum PageStatus {
 }
 
 /**
+ * Form configuration schema for lead capture
+ * Defines which customer information to collect
+ */
+export interface FormConfig {
+  collectName: boolean;
+  collectEmail: boolean;
+}
+
+/**
+ * Digital asset for download (e.g., PDF, files)
+ */
+export interface DigitalAsset {
+  url: string;
+  name: string;
+  assetType: 'file' | 'link';
+}
+
+/**
  * Data schema for StorePage JSON field
  * Contains page-specific configuration and pricing information
  */
 export interface PageDataSchema {
   // Page metadata
   title: string;
-  productId: string;
   
   // Pricing information (for checkout pages)
   price?: number;
   currency?: string;
   discountPrice?: number | null;
   isDiscountPriceAvailable?: boolean;
+  
+  // Form configuration for lead capture
+  form?: FormConfig;
+  
+  // Digital assets for download
+  digitalAssets?: DigitalAsset[];
   
   // Page-specific content (flexible for different page types)
   [key: string]: unknown;

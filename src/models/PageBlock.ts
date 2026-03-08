@@ -1,25 +1,39 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export enum BlockType {
-  HERO = 'hero',
   TESTIMONIAL = 'testimonial',
   FAQ = 'faq',
-  PRICING = 'pricing',
-  COUNTDOWN = 'countdown',
-  GUARANTEE = 'guarantee',
-  VIDEO = 'video',
-  CHECKOUT_BUTTON = 'checkout_button',
-  TEXT = 'text',
-  IMAGE = 'image',
-  DIVIDER = 'divider',
 }
+
+/**
+ * Data schema for testimonial/review block
+ */
+export interface TestimonialBlockSchema {
+  name: string; // Name of the reviewer
+  image?: string; // Optional image URL
+  content: string; // Review text
+  rating?: number; // Optional 1-5 rating
+}
+
+/**
+ * Data schema for FAQ block
+ */
+export interface FAQBlockSchema {
+  question: string; // FAQ question
+  answer: string; // FAQ answer
+}
+
+/**
+ * Union type for block data schemas
+ */
+export type BlockDataSchema = TestimonialBlockSchema | FAQBlockSchema;
 
 export class PageBlock extends Model {
   declare id: string;
   declare pageId: string;
   declare type: BlockType;
   declare position: number;
-  declare data: Record<string, unknown>;
+  declare data: BlockDataSchema;
   declare createdAt: Date;
   declare updatedAt: Date;
 }

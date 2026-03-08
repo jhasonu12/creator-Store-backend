@@ -25,7 +25,7 @@ const migrateProductStatus = async () => {
     console.log('✓ Database connected\n');
 
     // Load the comprehensive migration file
-    const migrationPath = path.join(__dirname, 'src/migrations/20260304000001-make-productid-required.js');
+    const migrationPath = path.join(__dirname, 'src/migrations/20260307000001-add-subtitle-to-products.js');
     const migration = require(migrationPath);
 
     console.log('Running product status type migration...\n');

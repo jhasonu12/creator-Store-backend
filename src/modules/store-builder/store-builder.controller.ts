@@ -44,7 +44,7 @@ export class StoreBuilderController {
           {
             model: Product,
             as: 'products',
-            attributes: ['id', 'type', 'title', 'thumbnailUrl', 'displayStyle', 'ctaButtonText', 'status', 'position', 'createdAt', 'updatedAt'],
+            attributes: ['id', 'type', 'title', 'subtitle', 'thumbnailUrl', 'displayStyle', 'ctaButtonText', 'status', 'position', 'createdAt', 'updatedAt'],
             order: [['position', 'ASC']],
             include: [
               {
@@ -202,20 +202,6 @@ export class StoreBuilderController {
       const page = await this.storeBuilderService.updatePage(id, req.body);
 
       sendResponse(res, StatusCodes.OK, 'Page updated successfully', page);
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
-    }
-  });
-
-  deletePage = asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const { id } = req.params;
-      await this.storeBuilderService.deletePage(id);
-
-      sendResponse(res, StatusCodes.OK, 'Page deleted successfully');
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
