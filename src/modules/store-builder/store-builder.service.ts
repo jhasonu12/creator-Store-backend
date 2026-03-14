@@ -1,9 +1,8 @@
 import { Sequelize } from 'sequelize';
 import { StatusCodes } from 'http-status-codes';
-import { Store, StoreType, StoreStatus } from '@models/Store';
+import { Store, StoreType } from '@models/Store';
 import { StoreSection, SectionStatus, SectionType } from '@models/StoreSection';
 import { StorePage, PageStatus, PageType, PageDataSchema } from '@models/StorePage';
-import { PageBlock, BlockType, BlockDataSchema } from '@models/PageBlock';
 import { StoreTheme } from '@models/StoreTheme';
 import { AppError } from '@common/utils/response';
 import { getSequelizeInstance } from '@config/database';
@@ -154,111 +153,10 @@ export class StoreBuilderService {
     return page;
   }
 
-  async updatePage(
-    pageId: string,
-    data: { type?: string; productId?: string; data?: PageDataSchema }
-  ): Promise<StorePage> {
-    const page = await StorePage.findByPk(pageId);
-    if (!page) {
-      throw new AppError(StatusCodes.NOT_FOUND, 'Page not found');
-    }
-
-    if (data.type) page.type = data.type as PageType;
-    if (data.productId !== undefined) page.productId = data.productId;
-    if (data.data) page.data = data.data;
-
-    await page.save();
-    return page;
-  }
-
   async getPages(storeId: string): Promise<StorePage[]> {
     return StorePage.findAll({
       where: { storeId },
       order: [['createdAt', 'DESC']],
-    });
-  }
-
-  // ========== PAGE BLOCKS (Reviews & FAQs) ==========
-
-  async createBlock(pageId: string, data: { type: string; data: BlockDataSchema; position?: number }): Promise<PageBlock> {
-    const page = await StorePage.findByPk(pageId);
-    if (!page) {
-      throw new AppError(StatusCodes.NOT_FOUND, 'Page not found');
-    }
-
-    // Get max position
-    const lastBlock = await PageBlock.findOne({
-      where: { pageId },
-      order: [['position', 'DESC']],
-    });
-
-    const position = data.position ?? (lastBlock ? lastBlock.position + 1 : 0);
-
-    const block = await PageBlock.create({
-      pageId,
-      type: data.type as BlockType,
-      data: data.data as BlockDataSchema,
-      position,
-    });
-
-    return block;
-  }
-
-  async updateBlock(blockId: string, data: { type?: string; data?: BlockDataSchema }): Promise<PageBlock> {
-    const block = await PageBlock.findByPk(blockId);
-    if (!block) {
-      throw new AppError(StatusCodes.NOT_FOUND, 'Block not found');
-    }
-
-    if (data.type) block.type = data.type as BlockType;
-    if (data.data) block.data = data.data as BlockDataSchema;
-
-    await block.save();
-    return block;
-  }
-
-  async deleteBlock(blockId: string): Promise<void> {
-    const block = await PageBlock.findByPk(blockId);
-    if (!block) {
-      throw new AppError(StatusCodes.NOT_FOUND, 'Block not found');
-    }
-
-    await block.destroy();
-  }
-
-  async reorderBlocks(pageId: string, blocks: Array<{ id: string; position: number }>): Promise<PageBlock[]> {
-    const page = await StorePage.findByPk(pageId);
-    if (!page) {
-      throw new AppError(StatusCodes.NOT_FOUND, 'Page not found');
-    }
-
-    const transaction = await this.sequelize.transaction();
-
-    try {
-      const updatedBlocks = await Promise.all(
-        blocks.map(async (item) => {
-          const block = await PageBlock.findByPk(item.id, { transaction });
-          if (!block || block.pageId !== pageId) {
-            throw new AppError(StatusCodes.NOT_FOUND, 'Block not found');
-          }
-          block.position = item.position;
-          await block.save({ transaction });
-          return block;
-        })
-      );
-
-      await transaction.commit();
-      return updatedBlocks;
-    } catch (error) {
-      await transaction.rollback();
-      throw error;
-    }
-  }
-
-  async getBlocks(pageId: string): Promise<PageBlock[]> {
-    return PageBlock.findAll({
-      where: { pageId },
-      order: [['position', 'ASC']],
     });
   }
 

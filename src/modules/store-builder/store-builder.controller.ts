@@ -196,98 +196,12 @@ export class StoreBuilderController {
     }
   });
 
-  updatePage = asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const { id } = req.params;
-      const page = await this.storeBuilderService.updatePage(id, req.body);
-
-      sendResponse(res, StatusCodes.OK, 'Page updated successfully', page);
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
-    }
-  });
-
   getPages = asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     try {
       const { storeId } = req.params;
       const pages = await this.storeBuilderService.getPages(storeId);
 
       sendResponse(res, StatusCodes.OK, 'Pages retrieved successfully', pages);
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
-    }
-  });
-
-  // ========== BLOCK ENDPOINTS ==========
-
-  createBlock = asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const { pageId } = req.params;
-      const block = await this.storeBuilderService.createBlock(pageId, req.body);
-
-      sendResponse(res, StatusCodes.CREATED, 'Block created successfully', block);
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
-    }
-  });
-
-  updateBlock = asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const { id } = req.params;
-      const block = await this.storeBuilderService.updateBlock(id, req.body);
-
-      sendResponse(res, StatusCodes.OK, 'Block updated successfully', block);
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
-    }
-  });
-
-  deleteBlock = asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const { id } = req.params;
-      await this.storeBuilderService.deleteBlock(id);
-
-      sendResponse(res, StatusCodes.OK, 'Block deleted successfully');
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
-    }
-  });
-
-  reorderBlocks = asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const { pageId } = req.params;
-      const blocks = await this.storeBuilderService.reorderBlocks(pageId, req.body.blocks);
-
-      sendResponse(res, StatusCodes.OK, 'Blocks reordered successfully', blocks);
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
-    }
-  });
-
-  getBlocks = asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const { pageId } = req.params;
-      const blocks = await this.storeBuilderService.getBlocks(pageId);
-
-      sendResponse(res, StatusCodes.OK, 'Blocks retrieved successfully', blocks);
     } catch (error) {
       if (error instanceof AppError) {
         throw error;

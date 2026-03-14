@@ -16,6 +16,7 @@ import storeSlugRoutes from '@modules/store-slugs/store-slug.routes';
 import storeBuilderRoutes from '@modules/store-builder/store-builder.routes';
 import productRoutes from '@modules/products/product.routes';
 import publicRoutes from '@modules/public/public.routes';
+import storePageRoutes from '@modules/store-pages/pages.routes';
 
 import { logger } from '@common/utils/logger';
 import { sendResponse } from '@common/utils/response';
@@ -57,6 +58,7 @@ export const createApp = (): Express => {
   app.use(`/api/${config.app.apiVersion}/stores`, storeBuilderRoutes);
   app.use(`/api/${config.app.apiVersion}/products`, productRoutes);
   app.use(`/api/${config.app.apiVersion}/files`, fileUploadRoutes);
+  app.use(`/api/${config.app.apiVersion}/pages`, storePageRoutes);
 
   // Public Routes (no authentication required)
   app.use('/public', publicRoutes);
