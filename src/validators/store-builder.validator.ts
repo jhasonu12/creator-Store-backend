@@ -5,8 +5,8 @@ import Joi from 'joi';
  * Form configuration schema for lead capture
  */
 const formConfigSchema = Joi.object({
-  collectName: Joi.boolean().required(),
-  collectEmail: Joi.boolean().required(),
+  collectName: Joi.boolean().default(true),
+  collectEmail: Joi.boolean().default(true),
 }).required();
 
 /**
@@ -32,12 +32,6 @@ const pageDataSchema = Joi.object({
   currency: Joi.string().length(3).optional(), // ISO 4217 currency code (e.g., 'USD')
   discountPrice: Joi.number().min(0).precision(2).allow(null).optional(),
   isDiscountPriceAvailable: Joi.boolean().optional(),
-  
-  // Form configuration
-  form: formConfigSchema.optional(),
-  
-  // Digital assets
-  digitalAssets: Joi.array().items(digitalAssetSchema).optional(),
   
   // Allow additional fields for flexibility
 }).unknown(true);
@@ -136,6 +130,8 @@ export const createPageSchema = Joi.object({
       .required(),
     productId: Joi.string().uuid().required(),
     data: pageDataSchema.required(),
+    form: formConfigSchema.optional(),
+    digitalAssets: Joi.array().items(digitalAssetSchema).optional(),
   }),
 });
 

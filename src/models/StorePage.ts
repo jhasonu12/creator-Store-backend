@@ -48,12 +48,6 @@ export interface PageDataSchema {
   discountPrice?: number | null;
   isDiscountPriceAvailable?: boolean;
   
-  // Form configuration for lead capture
-  form?: FormConfig;
-  
-  // Digital assets for download
-  digitalAssets?: DigitalAsset[];
-  
   // Page-specific content (flexible for different page types)
   [key: string]: unknown;
 }
@@ -65,6 +59,8 @@ export class StorePage extends Model {
   declare type: PageType;
   declare status: PageStatus;
   declare data: PageDataSchema;
+  declare form: FormConfig;
+  declare digitalAssets: DigitalAsset[];
   declare createdAt: Date;
   declare updatedAt: Date;
 }
@@ -97,6 +93,19 @@ export const initStorePage = (sequelize: Sequelize): typeof StorePage => {
         type: DataTypes.JSON,
         allowNull: false,
         defaultValue: {},
+      },
+      form: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: {
+          collectName: true,
+          collectEmail: true,
+        },
+      },
+      digitalAssets: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: [],
       },
       createdAt: {
         type: DataTypes.DATE,

@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize';
 import { StatusCodes } from 'http-status-codes';
-import { StorePage, PageType, PageDataSchema } from '@models/StorePage';
+import { StorePage, PageType, PageDataSchema, FormConfig, DigitalAsset } from '@models/StorePage';
 import { PageBlock, BlockType, BlockDataSchema } from '@models/PageBlock';
 import { AppError } from '@common/utils/response';
 import { getSequelizeInstance } from '@config/database';
@@ -16,7 +16,7 @@ export class StorePageService {
 
   async updatePage(
     pageId: string,
-    data: { type?: string; productId?: string; data?: PageDataSchema }
+    data: { type?: string; productId?: string; data?: PageDataSchema; form?: FormConfig; digitalAssets?: DigitalAsset[] }
   ): Promise<StorePage> {
     const page = await StorePage.findByPk(pageId);
     if (!page) {
@@ -26,6 +26,8 @@ export class StorePageService {
     if (data.type) page.type = data.type as PageType;
     if (data.productId !== undefined) page.productId = data.productId;
     if (data.data) page.data = data.data;
+    if (data.form !== undefined) page.form = data.form;
+    if (data.digitalAssets !== undefined) page.digitalAssets = data.digitalAssets;
 
     await page.save();
     return page;

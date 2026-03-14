@@ -2,7 +2,7 @@ import { Sequelize } from 'sequelize';
 import { StatusCodes } from 'http-status-codes';
 import { Store, StoreType } from '@models/Store';
 import { StoreSection, SectionStatus, SectionType } from '@models/StoreSection';
-import { StorePage, PageStatus, PageType, PageDataSchema } from '@models/StorePage';
+import { StorePage, PageStatus, PageType, PageDataSchema, FormConfig, DigitalAsset } from '@models/StorePage';
 import { StoreTheme } from '@models/StoreTheme';
 import { AppError } from '@common/utils/response';
 import { getSequelizeInstance } from '@config/database';
@@ -135,7 +135,7 @@ export class StoreBuilderService {
 
   async createPage(
     storeId: string,
-    data: { type: string; productId?: string; data: PageDataSchema }
+    data: { type: string; productId?: string; data: PageDataSchema; form?: FormConfig; digitalAssets?: DigitalAsset[] }
   ): Promise<StorePage> {
     const store = await Store.findByPk(storeId);
     if (!store) {
@@ -147,6 +147,8 @@ export class StoreBuilderService {
       type: data.type as PageType,
       productId: data.productId,
       data: data.data,
+      ...(data.form !== undefined && { form: data.form }),
+      ...(data.digitalAssets !== undefined && { digitalAssets: data.digitalAssets }),
       status: PageStatus.DRAFT,
     });
 

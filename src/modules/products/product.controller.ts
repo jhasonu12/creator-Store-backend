@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { ProductService } from './product.service';
 import { sendResponse, AppError, asyncHandler } from '@common/utils/response';
-import { ProductType, ProductStatus } from '@models/Product';
 
 interface AuthRequest extends Request {
   user?: { id: string };

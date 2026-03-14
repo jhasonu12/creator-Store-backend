@@ -15,6 +15,7 @@ export class StorePageController {
 
       sendResponse(res, StatusCodes.OK, 'Page updated successfully', page);
     } catch (error) {
+      console.error('Error in updatePage:', error);
       if (error instanceof AppError) {
         throw error;
       }

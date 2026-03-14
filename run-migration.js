@@ -25,7 +25,7 @@ const migrateProductStatus = async () => {
     console.log('✓ Database connected\n');
 
     // Load the comprehensive migration file
-    const migrationPath = path.join(__dirname, 'src/migrations/20260308000014-fix-store-pages-cascade-delete.js');
+    const migrationPath = path.join(__dirname, 'src/migrations/20260314233000-add-form-and-digital-assets-to-store-pages.js');
     const migration = require(migrationPath);
 
     console.log('Running product status type migration...\n');

@@ -1433,15 +1433,15 @@ curl -X PATCH http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-446655
 
 ### PAGES (Product Landing Pages)
 
-**Note:** Pages must reference a product (via required `productId` parameter). All pricing and configuration is stored in the `data` JSON field. The schema includes:
+**Note:** Pages must reference a product (via required `productId` parameter). Pricing/content is stored in `data`, while lead form and downloadable assets are root-level page fields. The schema includes:
 - `title` (required): Page title (1-200 characters)
 - `productId` (required): Associated product UUID - every page must link to a product
 - `price` (optional): Product price (0 or more, 2 decimal places)
 - `currency` (optional): ISO 4217 code (USD, EUR, etc.)
 - `discountPrice` (optional): Discounted price or null
 - `isDiscountPriceAvailable` (optional): Boolean flag for discount availability
-- `form` (optional): Form configuration for lead capture with `collectName` and `collectEmail` boolean flags
-- `digitalAssets` (optional): Array of downloadable files with `url`, `name`, and `assetType` ('file' or 'link') for each asset
+- `form` (optional, root-level): Form configuration for lead capture with `collectName` and `collectEmail` boolean flags (both default to `true` when omitted)
+- `digitalAssets` (optional, root-level): Array of downloadable files with `url`, `name`, and `assetType` ('file' or 'link') for each asset
 - Additional fields can be added as needed
 
 **Auto-Creation:** A checkout page is automatically created with default pricing when a product is created. Pages are ordered by creation date (newest first).
@@ -1471,6 +1471,11 @@ curl -X PATCH http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-446655
         "discountPrice": 79.99,
         "isDiscountPriceAvailable": true
       },
+      "form": {
+        "collectName": true,
+        "collectEmail": true
+      },
+      "digitalAssets": [],
       "createdAt": "2026-03-03T10:00:00Z",
       "updatedAt": "2026-03-03T10:00:00Z"
     }
@@ -1522,6 +1527,11 @@ curl -X POST http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-4466554
       "discountPrice": 79.99,
       "isDiscountPriceAvailable": true
     },
+    "form": {
+      "collectName": true,
+      "collectEmail": true
+    },
+    "digitalAssets": [],
     "createdAt": "2026-03-03T10:00:00Z",
     "updatedAt": "2026-03-03T10:00:00Z"
   }
@@ -1547,7 +1557,18 @@ curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-4466554
       "currency": "USD",
       "discountPrice": 59.99,
       "isDiscountPriceAvailable": true
-    }
+    },
+    "form": {
+      "collectName": true,
+      "collectEmail": true
+    },
+    "digitalAssets": [
+      {
+        "url": "https://cdn.example.com/starter-guide.pdf",
+        "name": "Starter Guide.pdf",
+        "assetType": "file"
+      }
+    ]
   }'
 ```
 
@@ -1570,6 +1591,17 @@ curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-4466554
       "discountPrice": 59.99,
       "isDiscountPriceAvailable": true
     },
+    "form": {
+      "collectName": true,
+      "collectEmail": true
+    },
+    "digitalAssets": [
+      {
+        "url": "https://cdn.example.com/starter-guide.pdf",
+        "name": "Starter Guide.pdf",
+        "assetType": "file"
+      }
+    ],
     "createdAt": "2026-03-03T10:00:00Z",
     "updatedAt": "2026-03-03T10:05:00Z"
   }
@@ -1594,11 +1626,11 @@ curl -X POST http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-4466554
     "data": {
       "title": "Course Registration",
       "price": 99.99,
-      "currency": "USD",
-      "form": {
-        "collectName": true,
-        "collectEmail": true
-      }
+      "currency": "USD"
+    },
+    "form": {
+      "collectName": true,
+      "collectEmail": true
     }
   }'
 ```
@@ -1618,12 +1650,13 @@ curl -X POST http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-4466554
     "data": {
       "title": "Course Registration",
       "price": 99.99,
-      "currency": "USD",
-      "form": {
-        "collectName": true,
-        "collectEmail": true
-      }
+      "currency": "USD"
     },
+    "form": {
+      "collectName": true,
+      "collectEmail": true
+    },
+    "digitalAssets": [],
     "createdAt": "2026-03-07T10:00:00Z",
     "updatedAt": "2026-03-07T10:00:00Z"
   }
@@ -1648,29 +1681,29 @@ curl -X POST http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-4466554
     "data": {
       "title": "Complete Marketing Templates Bundle",
       "price": 49.99,
-      "currency": "USD",
-      "form": {
-        "collectName": true,
-        "collectEmail": true
+      "currency": "USD"
+    },
+    "form": {
+      "collectName": true,
+      "collectEmail": true
+    },
+    "digitalAssets": [
+      {
+        "url": "https://cdn.example.com/marketing-guide.pdf",
+        "name": "Marketing Strategy Guide.pdf",
+        "assetType": "file"
       },
-      "digitalAssets": [
-        {
-          "url": "https://cdn.example.com/marketing-guide.pdf",
-          "name": "Marketing Strategy Guide.pdf",
-          "assetType": "file"
-        },
-        {
-          "url": "https://cdn.example.com/email-templates.zip",
-          "name": "Email Templates.zip",
-          "assetType": "file"
-        },
-        {
-          "url": "https://cdn.example.com/social-media-calendar.xlsx",
-          "name": "Social Media Calendar.xlsx",
-          "assetType": "file"
-        }
-      ]
-    }
+      {
+        "url": "https://cdn.example.com/email-templates.zip",
+        "name": "Email Templates.zip",
+        "assetType": "file"
+      },
+      {
+        "url": "https://cdn.example.com/social-media-calendar.xlsx",
+        "name": "Social Media Calendar.xlsx",
+        "assetType": "file"
+      }
+    ]
   }'
 ```
 
@@ -1689,29 +1722,29 @@ curl -X POST http://localhost:3001/api/v1/stores/660e8400-e29b-41d4-a716-4466554
     "data": {
       "title": "Complete Marketing Templates Bundle",
       "price": 49.99,
-      "currency": "USD",
-      "form": {
-        "collectName": true,
-        "collectEmail": true
-      },
-      "digitalAssets": [
-        {
-          "url": "https://cdn.example.com/marketing-guide.pdf",
-          "name": "Marketing Strategy Guide.pdf",
-          "assetType": "file"
-        },
-        {
-          "url": "https://cdn.example.com/email-templates.zip",
-          "name": "Email Templates.zip",
-          "assetType": "file"
-        },
-        {
-          "url": "https://cdn.example.com/social-media-calendar.xlsx",
-          "name": "Social Media Calendar.xlsx",
-          "assetType": "file"
-        }
-      ]
+      "currency": "USD"
     },
+    "form": {
+      "collectName": true,
+      "collectEmail": true
+    },
+    "digitalAssets": [
+      {
+        "url": "https://cdn.example.com/marketing-guide.pdf",
+        "name": "Marketing Strategy Guide.pdf",
+        "assetType": "file"
+      },
+      {
+        "url": "https://cdn.example.com/email-templates.zip",
+        "name": "Email Templates.zip",
+        "assetType": "file"
+      },
+      {
+        "url": "https://cdn.example.com/social-media-calendar.xlsx",
+        "name": "Social Media Calendar.xlsx",
+        "assetType": "file"
+      }
+    ],
     "createdAt": "2026-03-07T10:00:00Z",
     "updatedAt": "2026-03-07T10:00:00Z"
   }
@@ -2156,19 +2189,19 @@ curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-4466554
       "price": 119.99,
       "currency": "USD",
       "discountPrice": 79.99,
-      "isDiscountPriceAvailable": true,
-      "form": {
-        "collectName": true,
-        "collectEmail": true
-      },
-      "digitalAssets": [
-        {
-          "url": "https://cdn.example.com/starter-guide.pdf",
-          "name": "Starter Guide.pdf",
-          "assetType": "file"
-        }
-      ]
-    }
+      "isDiscountPriceAvailable": true
+    },
+    "form": {
+      "collectName": true,
+      "collectEmail": true
+    },
+    "digitalAssets": [
+      {
+        "url": "https://cdn.example.com/starter-guide.pdf",
+        "name": "Starter Guide.pdf",
+        "assetType": "file"
+      }
+    ]
   }'
 ```
 
@@ -2189,19 +2222,19 @@ curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-4466554
       "price": 119.99,
       "currency": "USD",
       "discountPrice": 79.99,
-      "isDiscountPriceAvailable": true,
-      "form": {
-        "collectName": true,
-        "collectEmail": true
-      },
-      "digitalAssets": [
-        {
-          "url": "https://cdn.example.com/starter-guide.pdf",
-          "name": "Starter Guide.pdf",
-          "assetType": "file"
-        }
-      ]
+      "isDiscountPriceAvailable": true
     },
+    "form": {
+      "collectName": true,
+      "collectEmail": true
+    },
+    "digitalAssets": [
+      {
+        "url": "https://cdn.example.com/starter-guide.pdf",
+        "name": "Starter Guide.pdf",
+        "assetType": "file"
+      }
+    ],
     "createdAt": "2026-03-07T10:00:00Z",
     "updatedAt": "2026-03-07T10:15:00Z"
   }

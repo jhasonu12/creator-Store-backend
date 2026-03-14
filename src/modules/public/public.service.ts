@@ -30,7 +30,7 @@ export class PublicService {
             {
               model: StorePage,
               as: 'pages',
-              attributes: ['id', 'type', 'status', 'data', 'createdAt', 'updatedAt'],
+              attributes: ['id', 'type', 'status', 'data', 'form', 'digitalAssets', 'createdAt', 'updatedAt'],
               order: [['createdAt', 'DESC']],
               include: [
                 {
