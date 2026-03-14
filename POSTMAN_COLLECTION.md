@@ -1764,7 +1764,12 @@ Checkout pages support two types of blocks: **Testimonials (Reviews)** and **FAQ
 
 **Endpoint:** `GET /pages/:pageId/blocks`
 
-**Response:**
+**Request:**
+```bash
+curl -X GET http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-446655440002/blocks
+```
+
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -1894,11 +1899,11 @@ curl -X POST http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-44665544
 #### Update Block
 **Scenario:** Edit a testimonial or FAQ block content.
 
-**Endpoint:** `PATCH /blocks/:id`
+**Endpoint:** `PATCH /pages/blocks/:id`
 
 **Request:**
 ```bash
-curl -X PATCH http://localhost:3001/api/v1/blocks/990e8400-e29b-41d4-a716-446655440002 \
+curl -X PATCH http://localhost:3001/api/v1/pages/blocks/990e8400-e29b-41d4-a716-446655440002 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -d '{
@@ -1916,7 +1921,22 @@ curl -X PATCH http://localhost:3001/api/v1/blocks/990e8400-e29b-41d4-a716-446655
 #### Delete Block
 **Scenario:** Remove a testimonial or FAQ from the checkout page.
 
-**Endpoint:** `DELETE /blocks/:id`
+**Endpoint:** `DELETE /pages/blocks/:id`
+
+**Request:**
+```bash
+curl -X DELETE http://localhost:3001/api/v1/pages/blocks/990e8400-e29b-41d4-a716-446655440002 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Block deleted successfully"
+}
+```
 
 ---
 
@@ -2266,18 +2286,17 @@ curl -X PATCH http://localhost:3001/api/v1/pages/880e8400-e29b-41d4-a716-4466554
 #### Update Block (Testimonial/FAQ)
 **Scenario:** User edits a testimonial or FAQ on the checkout page. Updates the block data while preserving position.
 
-**Endpoint:** `PATCH /blocks/:id`
+**Endpoint:** `PATCH /pages/blocks/:id`
 
 **Request - Update Testimonial:**
 ```bash
-curl -X PATCH http://localhost:3001/api/v1/blocks/990e8400-e29b-41d4-a716-446655440005 \
+curl -X PATCH http://localhost:3001/api/v1/pages/blocks/990e8400-e29b-41d4-a716-446655440005 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -d '{
     "type": "testimonial",
     "data": {
       "name": "Jane Smith",
-      "role": "Product Manager",
       "image": "https://example.com/jane-smith.jpg",
       "content": "This course completely transformed my career. The hands-on projects were invaluable.",
       "rating": 5
@@ -2298,7 +2317,6 @@ curl -X PATCH http://localhost:3001/api/v1/blocks/990e8400-e29b-41d4-a716-446655
     "position": 0,
     "data": {
       "name": "Jane Smith",
-      "role": "Product Manager",
       "image": "https://example.com/jane-smith.jpg",
       "content": "This course completely transformed my career. The hands-on projects were invaluable.",
       "rating": 5
