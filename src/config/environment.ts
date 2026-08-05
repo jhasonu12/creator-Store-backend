@@ -50,12 +50,18 @@ export const config = {
     fromEmail: process.env.SMTP_FROM_EMAIL || 'noreply@creatorworld.com',
   },
 
-  // AWS/Cloud Storage
+  // AWS/Cloud Storage (S3-compatible; supports Supabase Storage via S3_ENDPOINT)
   aws: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
     region: process.env.AWS_REGION || 'us-east-1',
     s3BucketName: process.env.S3_BUCKET_NAME || '',
+    // Custom S3 endpoint (e.g. Supabase). Empty = default AWS S3.
+    endpoint: process.env.S3_ENDPOINT || '',
+    // Path-style is required for most S3-compatible providers like Supabase.
+    forcePathStyle: (process.env.S3_FORCE_PATH_STYLE || 'false') === 'true',
+    // Base URL for building public object URLs (e.g. Supabase public object path).
+    publicUrlBase: process.env.S3_PUBLIC_URL_BASE || '',
   },
 
   // File Upload

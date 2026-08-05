@@ -24,7 +24,8 @@ export class S3Service {
   private bucketName: string;
 
   constructor() {
-    const { accessKeyId, secretAccessKey, region, s3BucketName } = config.aws;
+    const { accessKeyId, secretAccessKey, region, s3BucketName, endpoint, forcePathStyle } =
+      config.aws;
 
     if (!accessKeyId || !secretAccessKey || !s3BucketName) {
       throw new Error('S3 credentials are not configured. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and S3_BUCKET_NAME env variables.');
@@ -36,6 +37,8 @@ export class S3Service {
         accessKeyId,
         secretAccessKey,
       },
+      // Support S3-compatible providers (e.g. Supabase Storage)
+      ...(endpoint ? { endpoint, forcePathStyle: forcePathStyle || true } : {}),
     });
 
     this.bucketName = s3BucketName;
@@ -123,6 +126,19 @@ export class S3Service {
    * Note: Only works if the object has public-read ACL
    */
   getPublicUrl(key: string): string {
+    // Custom base (e.g. Supabase public object path) takes precedence
+    if (config.aws.publicUrlBase) {
+      const base = config.aws.publicUrlBase.replace(/\/+$/, '');
+      return `${base}/${this.bucketName}/${key}`;
+    }
+
+    // S3-compatible endpoint (path-style)
+    if (config.aws.endpoint) {
+      const base = config.aws.endpoint.replace(/\/+$/, '');
+      return `${base}/${this.bucketName}/${key}`;
+    }
+
+    // Default AWS S3 virtual-hosted style
     const region = config.aws.region;
     return `https://${this.bucketName}.s3.${region}.amazonaws.com/${key}`;
   }

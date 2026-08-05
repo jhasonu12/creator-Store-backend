@@ -15,20 +15,13 @@ export class ProductController {
    * Get all products for the authenticated creator
    */
   getProducts = asyncHandler(async (req: AuthRequest, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const creatorId = req.user?.id;
-      if (!creatorId) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
-      }
-
-      const products = await this.productService.getProducts(creatorId);
-      sendResponse(res, StatusCodes.OK, 'Products retrieved successfully', products);
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
+    const creatorId = req.user?.id;
+    if (!creatorId) {
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
     }
+
+    const products = await this.productService.getProducts(creatorId);
+    sendResponse(res, StatusCodes.OK, 'Products retrieved successfully', products);
   });
 
   /**
@@ -36,18 +29,10 @@ export class ProductController {
    * Get a single product
    */
   getProduct = asyncHandler(async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const { id } = req.params;
-      const product = await this.productService.getProduct(id);
+    const { id } = req.params;
+    const product = await this.productService.getProduct(id);
 
-      sendResponse(res, StatusCodes.OK, 'Product retrieved successfully', product);
-    } catch (error) {
-      console.error('Error in getProduct:', error);
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
-    }
+    sendResponse(res, StatusCodes.OK, 'Product retrieved successfully', product);
   });
 
   /**
@@ -55,21 +40,13 @@ export class ProductController {
    * Create a new product
    */
   createProduct = asyncHandler(async (req: AuthRequest, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
-      }
-
-      const product = await this.productService.createProduct(userId, req.body);
-      sendResponse(res, StatusCodes.CREATED, 'Product created successfully', product);
-    } catch (error) {
-      console.error('Error in createProduct:', error);
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
     }
+
+    const product = await this.productService.createProduct(userId, req.body);
+    sendResponse(res, StatusCodes.CREATED, 'Product created successfully', product);
   });
 
   /**
@@ -77,22 +54,15 @@ export class ProductController {
    * Update a product
    */
   updateProduct = asyncHandler(async (req: AuthRequest, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const creatorId = req.user?.id;
-      if (!creatorId) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
-      }
-
-      const { id } = req.params;
-      const product = await this.productService.updateProduct(id, creatorId, req.body);
-
-      sendResponse(res, StatusCodes.OK, 'Product updated successfully', product);
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
+    const creatorId = req.user?.id;
+    if (!creatorId) {
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
     }
+
+    const { id } = req.params;
+    const product = await this.productService.updateProduct(id, creatorId, req.body);
+
+    sendResponse(res, StatusCodes.OK, 'Product updated successfully', product);
   });
 
   /**
@@ -100,23 +70,15 @@ export class ProductController {
    * Delete a product
    */
   deleteProduct = asyncHandler(async (req: AuthRequest, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const creatorId = req.user?.id;
-      if (!creatorId) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
-      }
-
-      const { id } = req.params;
-      await this.productService.deleteProduct(id, creatorId);
-
-      sendResponse(res, StatusCodes.OK, 'Product deleted successfully');
-    } catch (error) {
-      console.error('Error in deleteProduct:', error);
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
+    const creatorId = req.user?.id;
+    if (!creatorId) {
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
     }
+
+    const { id } = req.params;
+    await this.productService.deleteProduct(id, creatorId);
+
+    sendResponse(res, StatusCodes.OK, 'Product deleted successfully');
   });
 
   /**
@@ -124,23 +86,16 @@ export class ProductController {
    * Update product status
    */
   updateStatus = asyncHandler(async (req: AuthRequest, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
-      }
-
-      const { id } = req.params;
-      const { status } = req.body;
-      const product = await this.productService.updateStatus(id, userId, status);
-
-      sendResponse(res, StatusCodes.OK, `Product status updated to ${status}`, product);
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
     }
+
+    const { id } = req.params;
+    const { status } = req.body;
+    const product = await this.productService.updateStatus(id, userId, status);
+
+    sendResponse(res, StatusCodes.OK, `Product status updated to ${status}`, product);
   });
 
   /**
@@ -148,21 +103,14 @@ export class ProductController {
    * Reorder products
    */
   reorderProducts = asyncHandler(async (req: AuthRequest, res: Response, _next: NextFunction): Promise<void> => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
-      }
-
-      const { products } = req.body;
-      const reorderedProducts = await this.productService.reorderProducts(userId, products);
-
-      sendResponse(res, StatusCodes.OK, 'Products reordered successfully', reorderedProducts);
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Internal server error');
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
     }
+
+    const { products } = req.body;
+    const reorderedProducts = await this.productService.reorderProducts(userId, products);
+
+    sendResponse(res, StatusCodes.OK, 'Products reordered successfully', reorderedProducts);
   });
 }
